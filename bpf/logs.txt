@@ -1,0 +1,96 @@
+ DNS Res~ver #29-18452   [002] b..1. 12845.354869: bpf_trace_printk: Paquete TCP capturado
+
+ DNS Res~ver #29-18452   [002] ..s2. 12845.354910: bpf_trace_printk: Paquete TCP capturado
+
+ systemd-resolve-459     [002] b..1. 12845.356357: bpf_trace_printk: Paquete TCP capturado
+
+ systemd-resolve-459     [002] ..s2. 12845.356366: bpf_trace_printk: Paquete TCP capturado
+
+ DNS Res~ver #29-18452   [002] b..1. 12845.356438: bpf_trace_printk: Paquete TCP capturado
+
+ DNS Res~ver #29-18452   [002] ..s2. 12845.356443: bpf_trace_printk: Paquete TCP capturado
+
+ systemd-resolve-459     [002] b..1. 12845.357042: bpf_trace_printk: Paquete TCP capturado
+
+ systemd-resolve-459     [002] ..s2. 12845.357048: bpf_trace_printk: Paquete TCP capturado
+
+ DNS Res~ver #35-21090   [000] b..1. 12849.149240: bpf_trace_printk: Paquete TCP capturado
+
+ DNS Res~ver #35-21090   [000] ..s2. 12849.149282: bpf_trace_printk: Paquete TCP capturado
+
+ DNS Res~ver #35-21090   [000] b..1. 12849.149305: bpf_trace_printk: Paquete TCP capturado
+
+ DNS Res~ver #35-21090   [000] ..s2. 12849.149307: bpf_trace_printk: Paquete TCP capturado
+
+ systemd-resolve-459     [002] b..1. 12849.149891: bpf_trace_printk: Paquete TCP capturado
+
+ systemd-resolve-459     [002] ..s2. 12849.149924: bpf_trace_printk: Paquete TCP capturado
+
+ systemd-resolve-459     [002] b..1. 12849.150281: bpf_trace_printk: Paquete TCP capturado
+
+ systemd-resolve-459     [002] ..s2. 12849.150309: bpf_trace_printk: Paquete TCP capturado
+
+ DNS Res~ver #32-19700   [003] b..1. 12849.165254: bpf_trace_printk: Paquete TCP capturado
+
+ DNS Res~ver #32-19700   [003] .Ns2. 12849.165292: bpf_trace_printk: Paquete TCP capturado
+
+ DNS Res~ver #32-19700   [003] b..1. 12849.165471: bpf_trace_printk: Paquete TCP capturado
+
+ DNS Res~ver #32-19700   [003] .Ns2. 12849.165492: bpf_trace_printk: Paquete TCP capturado
+
+ systemd-resolve-459     [002] b..1. 12849.165995: bpf_trace_printk: Paquete TCP capturado
+
+ systemd-resolve-459     [002] ..s2. 12849.166026: bpf_trace_printk: Paquete TCP capturado
+
+ systemd-resolve-459     [002] b..1. 12849.166309: bpf_trace_printk: Paquete TCP capturado
+
+ systemd-resolve-459     [002] ..s2. 12849.166390: bpf_trace_printk: Paquete TCP capturado
+
+ DNS Res~ver #30-18511   [002] b..1. 12850.368743: bpf_trace_printk: Paquete TCP capturado
+
+ DNS Res~ver #30-18511   [002] ..s2. 12850.368772: bpf_trace_printk: Paquete TCP capturado
+
+ DNS Res~ver #30-18511   [002] b..1. 12850.369117: bpf_trace_printk: Paquete TCP capturado
+
+ DNS Res~ver #30-18511   [002] ..s2. 12850.369139: bpf_trace_printk: Paquete TCP capturado
+
+ systemd-resolve-459     [002] b..1. 12850.426056: bpf_trace_printk: Paquete TCP capturado
+
+ systemd-resolve-459     [002] ..s2. 12850.426086: bpf_trace_printk: Paquete TCP capturado
+
+ systemd-resolve-459     [002] b..1. 12850.448152: bpf_trace_printk: Paquete TCP capturado
+
+ systemd-resolve-459     [002] ..s2. 12850.448182: bpf_trace_printk: Paquete TCP capturado
+
+ DNS Res~ver #31-18995   [002] b..1. 12850.641698: bpf_trace_printk: Paquete TCP capturado
+
+ DNS Res~ver #31-18995   [002] ..s2. 12850.641719: bpf_trace_printk: Paquete TCP capturado
+
+ systemd-resolve-459     [002] bN.1. 12850.641944: bpf_trace_printk: Paquete TCP capturado
+
+ systemd-resolve-459     [002] .Ns2. 12850.641959: bpf_trace_printk: Paquete TCP capturado
+
+ DNS Res~ver #31-18995   [002] b..1. 12850.642042: bpf_trace_printk: Paquete TCP capturado
+
+ DNS Res~ver #31-18995   [002] ..s2. 12850.642059: bpf_trace_printk: Paquete TCP capturado
+
+ systemd-resolve-459     [002] b..1. 12850.642200: bpf_trace_printk: Paquete TCP capturado
+
+ systemd-resolve-459     [002] ..s2. 12850.642215: bpf_trace_printk: Paquete TCP capturado
+
+ DNS Res~ver #29-18452   [002] b..1. 12851.784036: bpf_trace_printk: Paquete TCP capturado
+
+ DNS Res~ver #29-18452   [002] ..s2. 12851.784062: bpf_trace_printk: Paquete TCP capturado
+
+ systemd-resolve-459     [002] b..1. 12851.784328: bpf_trace_printk: Paquete TCP capturado
+
+ systemd-resolve-459     [002] ..s2. 12851.784346: bpf_trace_printk: Paquete TCP capturado
+
+ DNS Res~ver #29-18452   [002] b..1. 12851.784458: bpf_trace_printk: Paquete TCP capturado
+
+ DNS Res~ver #29-18452   [002] ..s2. 12851.784473: bpf_trace_printk: Paquete TCP capturado
+
+ systemd-resolve-459     [002] b..1. 12851.784720: bpf_trace_printk: Paquete TCP capturado
+
+ systemd-resolve-459     [002] ..s2. 12851.784736: bpf_trace_printk: Paquete TCP capturado
+
