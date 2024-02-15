@@ -26,3 +26,9 @@ Este proyecto está destinado a proporcionar un punto de partida para aquellos q
 
    ```bash
    git clone https://github.com/Rattle-Brain/go-ebpf.git
+
+---
+
+## Disclaimer
+
+*Este README.md fue generado con asistencia de inteligencia artificial.*
