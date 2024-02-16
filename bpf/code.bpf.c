@@ -137,14 +137,14 @@ int interceptor(struct __sk_buff* skb) {
                 the 0xFFFF is there. To indicate that the packet is 
                 an IPv4 embedded within a IPv6.
             */
-            pkt.src_ip.in6_u.u6_addr32[3] = ip->saddr;
-            pkt.dst_ip.in6_u.u6_addr32[3] = ip->daddr;
+            pkt.src_ip.in6_u.u6_addr32[3] = ipv4->saddr;
+            pkt.dst_ip.in6_u.u6_addr32[3] = ipv4->daddr;
 
             pkt.src_ip.in6_u.u6_addr16[5] = 0xffff;
             pkt.dst_ip.in6_u.u6_addr16[5] = 0xffff;
 
-            pkt.protocol = ip->protocol;
-            pkt.ttl = ip->ttl;
+            pkt.protocol = ipv4->protocol;
+            pkt.ttl = ipv4->ttl;
 
             break;
 
