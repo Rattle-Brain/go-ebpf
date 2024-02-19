@@ -1,28 +1,28 @@
 # Go eBPF
 
-![Go eBPF Logo](https://www.google.com/url?sa=i&url=https%3A%2F%2Fm.youtube.com%2Fwatch%3Fv%3DeZp_3EjJdnA&psig=AOvVaw20D4fmWOzUhpSgV13xQy-F&ust=1708085356355000&source=images&cd=vfe&opi=89978449&ved=0CBIQjRxqFwoTCIjh0vmnrYQDFQAAAAAdAAAAABAE)
+![Go eBPF Logo](https://ebpf-go.dev/ebpf-go.png)
 
-Este repositorio es un proyecto de prueba diseñado para familiarizarse con la tecnología eBPF (Extended Berkeley Packet Filter) utilizando el lenguaje de programación Go.
+This repository is a test project designed to get familiar with eBPF (Extended Berkeley Packet Filter) technology using the Go programming language.
 
-## Descripción
+## Description
 
-La tecnología eBPF ha ganado popularidad en los últimos años debido a su capacidad para proporcionar un marco seguro y eficiente para la programación en el kernel de Linux. Permite a los desarrolladores escribir pequeños programas que se ejecutan en el kernel y pueden interceptar y modificar eventos del sistema en tiempo real, como el tráfico de red o eventos del sistema.
+eBPF technology has gained popularity in recent years due to its ability to provide a secure and efficient framework for programming in the Linux kernel. It allows developers to write small programs that run in the kernel and can intercept and modify system events in real-time, such as network traffic or system events.
 
-Este proyecto está destinado a proporcionar un punto de partida para aquellos que deseen explorar eBPF con Go. Proporciona ejemplos simples de cómo escribir programas eBPF utilizando Go y cómo cargarlos y ejecutarlos en el kernel.
+This project aims to provide a starting point for those who want to explore eBPF with Go. It provides simple examples of how to write eBPF programs using Go and how to load and execute them in the kernel.
 
-## Funcionalidades
+## Features
 
-- Ejemplos de programas eBPF escritos en Go.
-- Utilidades para cargar y gestionar programas eBPF en el kernel desde Go.
+- Examples of eBPF programs written in Go.
+- Utilities for loading and managing eBPF programs in the kernel from Go.
 
-## Requisitos previos
+## Prerequisites
 
-- Go instalado en tu sistema.
-- Acceso al código fuente del kernel de Linux (para compilar e instalar módulos BPF).
+- Go installed on your system.
+- Access to the Linux kernel source code (to compile and install BPF modules).
 
-## Uso
+## Usage
 
-1. **Clona el repositorio:**
+1. **Clone the repository:**
 
    ```bash
    git clone https://github.com/Rattle-Brain/go-ebpf.git
@@ -31,4 +31,4 @@ Este proyecto está destinado a proporcionar un punto de partida para aquellos q
 
 ## Disclaimer
 
-*Este README.md fue generado con asistencia de inteligencia artificial.*
+*This README.md was generated with the assistance of artificial intelligence.*
