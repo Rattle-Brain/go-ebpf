@@ -60,9 +60,9 @@ func (ft *FlowTable) Flush() {
 
 	ft.Range(func(hash, timestamp interface{}) bool {
 		if (now-timestamp.(uint64))/1000000 > 10000 {
-			fmt.Printf("Pruning stale entry from flow table: %v", hash)
+			fmt.Printf("Removing old entry from flow table: %v", hash)
 
-			ft.Delete(hash)
+			ft.Remove(hash.(uint64))
 
 			return true
 		}

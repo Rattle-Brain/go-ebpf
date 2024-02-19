@@ -43,7 +43,7 @@ int interceptor(struct __sk_buff* skb) {
     /*
         If skb is non-linear the function bpf_skb_pull_data
         pulls the data from the skb struct to a linear region of
-        memory, if I get it correctly.
+        memory, if I understand it correctly.
 
         If it returns a negative number means something failed, so
         we skip the rest of the program and return
@@ -68,8 +68,8 @@ int interceptor(struct __sk_buff* skb) {
         and end in memory. We create a void pointer since it's not 
         a specifically typed field. We just want the addresses
     */
-    void* head = (void*)(long)skb->data;
-    void* tail = (void*)(long)skb->data_end;
+    void* head = (void*)skb->data;
+    void* tail = (void*)skb->data_end;
 
     /*
         With the header and tail memory addresses, we now 

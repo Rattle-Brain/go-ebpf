@@ -2,7 +2,10 @@ package packet
 
 import (
 	"encoding/binary"
+	"fmt"
+	"hash/fnv"
 	"net/netip"
+	"reflect"
 )
 
 /**
@@ -95,6 +98,39 @@ func UnmarshallBins(marshd []byte) (Packet, bool) {
 
 	// we build the packet information correctly, so now we return it.
 	return pack, true
+}
+
+/*
+The next two funcs are meant to generate a hash value
+to be the key for the flowtable the latency will be stored in.
+The first one is the Key Generator itself, where we take the
+Source and Destination IP addrs and mesh them together in a single
+hash to be used as key for the packet.
+
+The second one is the support function for us to actually generate a hash
+of the value we want.
+*/
+
+func (pkt *Packet) KeyGen() uint64 {
+	if reflect.DeepEqual(pkt, Packet{}) {
+		fmt.Printf("Packet to hash is null.\n")
+		return 0
+	}
+
+	var sip []byte
+	var dip []byte
+
+	sip = pkt.SrcIP.AsSlice()
+	dip = pkt.DstIP.AsSlice()
+
+	return hash(sip) + hash(dip)
+
+}
+
+func hash(value []byte) uint64 {
+	h := fnv.New64()
+	h.Write(value)
+	return h.Sum64()
 }
 
 /*
