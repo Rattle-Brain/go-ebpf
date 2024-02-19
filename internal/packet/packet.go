@@ -5,19 +5,6 @@ import (
 	"net/netip"
 )
 
-// Same attrs as the packet_t struct in code.bpf.c
-type Packet struct {
-	SrcIP     netip.Addr
-	DstIP     netip.Addr
-	SrcPort   uint16
-	DstPort   uint16
-	Protocol  uint8
-	TTL       uint8
-	Syn       bool
-	Ack       bool
-	TimeStamp uint64
-}
-
 /**
 Well, we created a struct in C with the information the
 network packet should have. The problem is we cannot access
@@ -46,6 +33,22 @@ syn:        size = 1,    offset = 38
 ack:        size = 1,    offset = 39
 ts:         size = 8,    offset = 40
 */
+
+// Same attrs as the packet_t struct in code.bpf.c
+type Packet struct {
+	SrcIP     netip.Addr
+	DstIP     netip.Addr
+	SrcPort   uint16
+	DstPort   uint16
+	Protocol  uint8
+	TTL       uint8
+	Syn       bool
+	Ack       bool
+	TimeStamp uint64
+}
+
+const UDP = 17
+const TCP = 6
 
 func UnmarshallBins(marshd []byte) (Packet, bool) {
 	// Let's obtain the IP addrs
