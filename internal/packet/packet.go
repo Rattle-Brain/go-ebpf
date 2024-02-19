@@ -96,3 +96,9 @@ func UnmarshallBins(marshd []byte) (Packet, bool) {
 	// we build the packet information correctly, so now we return it.
 	return pack, true
 }
+
+/*
+I still have to create a way to insert this packets into the flowtable
+we created, so we can keep track of every packet, maybe process it and
+send it to a CSV if we consider it interesting. We'll see
+*/
