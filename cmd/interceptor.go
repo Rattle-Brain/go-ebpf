@@ -3,12 +3,14 @@ package main
 import (
 	"context"
 	"fmt"
+	"log"
 	"net"
 	"os"
 	"os/signal"
 	"syscall"
 
 	"github.com/vishvananda/netlink"
+	"go.mod/internal/probe"
 )
 
 /*
@@ -20,7 +22,7 @@ func main() {
 	fmt.Println("Type the network interface to listen on (e.j eth0):")
 	fmt.Scanln(&stringInterface)
 
-	_, ok := netlink.LinkByName(stringInterface) // Attaches the name introduced to an actual understandable var
+	iface, ok := netlink.LinkByName(stringInterface) // Attaches the name introduced to an actual understandable var
 
 	// If the function fails, most likely the iface introduced is wrong, so we display
 	// all the ifaces available to monitor in the computer
@@ -31,11 +33,19 @@ func main() {
 
 	// Now we set the program to run in the background
 	ctx := context.Background()
-	_, ctrl_c := context.WithCancel(ctx)
+	ctx, ctrl_c := context.WithCancel(ctx)
+	prb, err := probe.NewProbe(iface)
+	if err != nil {
+		fmt.Printf("Error wihle creating the probe\n")
+	}
 
 	// And define a func that handles the CTRL+C shortcut to
 	// Terminate the execution
 	signalHandler(ctrl_c)
+
+	if err := prb.Run(ctx, iface); err != nil {
+		log.Fatalf("Failed running the probe: %v", err)
+	}
 }
 
 // Helper function to display the available interfaces in the computer
