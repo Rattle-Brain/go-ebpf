@@ -24,9 +24,9 @@ This project aims to provide a starting point for those who want to explore eBPF
 
 1. **Clone the repository:**
 
-   ```bash
-   git clone https://github.com/Rattle-Brain/go-ebpf.git
-   ```
+```bash
+git clone https://github.com/Rattle-Brain/go-ebpf.git
+```
 
 2. **Compile the code:**
 
@@ -43,13 +43,14 @@ This command compiles the Go code and generates an executable binary named inter
 
 Once the compilation is successful, run the following command to execute the generated binary:
 
+
 ```bash
 
 ./interceptor
-
+```
 This command will execute the interceptor binary, which contains your compiled Go program. Depending on the functionality of your program, it will perform its tasks accordingly
----
 
+---
 ## Disclaimer
 
 *This README.md was generated with the assistance of artificial intelligence.*
