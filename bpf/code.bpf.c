@@ -30,10 +30,10 @@ struct packet_t {
     uint64_t ts;
 };
 
-
+// This struct defines the map for the info to be stored in.
 struct {
-    __uint(map_buffer, BPF_MAP_TYPE_RINGBUF);
-    __uint(size, 512 * 1024); /* 512 KB */
+    __uint(type, BPF_MAP_TYPE_RINGBUF);
+    __uint(max_entries, 512 * 1024); /* 512 KB */
 } pipe SEC(".maps");
 
 

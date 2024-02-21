@@ -6,6 +6,9 @@ import (
 	"hash/fnv"
 	"net/netip"
 	"reflect"
+
+	"github.com/fatih/color"
+	"go.mod/internal/flowtable"
 )
 
 /**
@@ -52,6 +55,7 @@ type Packet struct {
 
 const UDP = 17
 const TCP = 6
+const TO_SEC_FROM_NANO = 1_000_000
 
 func UnmarshallBins(marshd []byte) (Packet, bool) {
 	// Let's obtain the IP addrs
@@ -134,7 +138,50 @@ func hash(value []byte) uint64 {
 }
 
 /*
-I still have to create a way to insert this packets into the flowtable
-we created, so we can keep track of every packet, maybe process it and
-send it to a CSV if we consider it interesting. We'll see
+This fucntion caclulates the latency of every packet that arrives to the
+network.
+We here used the github.com/fatih/color module in order to make it more
+easily noticable whenever the packet is TCP (Yellow) or UDP (Cyan).
+You may also notice the value TO_SEC_FROM_NANO which takes as value 1M
+because in every second there's a million nanosecs, so thats the factor
+we have to use to transform the ns received into seconds
 */
+func CalcLatency(pkt Packet, ft *flowtable.FlowTable) {
+
+	prot := pkt.Protocol
+	pktHash := pkt.KeyGen() // This generates the hash, or key, for the map
+
+	ts, ok := ft.Get(pktHash) // And we check if the packet is not already there
+
+	if !ok && pkt.Syn {
+		ft.Add(pktHash, pkt.TimeStamp)
+		return
+	} else if !ok && prot == UDP {
+		ft.Add(pktHash, pkt.TimeStamp)
+		return
+	} else if !ok {
+		return
+	}
+
+	if pkt.Ack {
+		color.Yellow("TCP | src: %v:%-7v\tdst: %v:%-9v\tTTL: %-4v\tlatency: %.3f ms\n",
+			pkt.DstIP.Unmap().String(),
+			pkt.DstPort,
+			pkt.SrcIP.Unmap().String(),
+			pkt.SrcPort,
+			pkt.TTL,
+			(float64(pkt.TimeStamp)-float64(ts))/TO_SEC_FROM_NANO,
+		)
+		ft.Remove(pktHash)
+	} else if prot == UDP {
+		color.Cyan("UDP | src: %v:%-7v\tdst: %v:%-9v\tTTL: %-4v\tlatency: %.3f ms\n",
+			pkt.DstIP.Unmap().String(),
+			pkt.DstPort,
+			pkt.SrcIP.Unmap().String(),
+			pkt.SrcPort,
+			pkt.TTL,
+			(float64(pkt.TimeStamp)-float64(ts))/TO_SEC_FROM_NANO,
+		)
+		ft.Remove(pktHash)
+	}
+}
