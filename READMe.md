@@ -46,7 +46,6 @@ Once the compilation is successful, run the following command to execute the gen
 ```bash
 
 ./interceptor
-```
 
 This command will execute the interceptor binary, which contains your compiled Go program. Depending on the functionality of your program, it will perform its tasks accordingly
 ---
