@@ -48,16 +48,16 @@ Once the compilation is successful, run the following command to execute the gen
 
 ```bash
 
-./interceptor
+sudo ./interceptor
 ```
 
 By default will choose a Network Interface named *eth0*. To manually select another name, use the following flag:
 
 ```bash
-./interceptor -i enp0s3
+sudo ./interceptor -i enp0s3
 ```
 
-This command will execute the interceptor binary, which contains your compiled Go program. Depending on the functionality of your program, it will perform its tasks accordingly
+**Since we are using eBPF at kernel level, we need to grant the program root privileges, if not run with sudo, it will not work.**
 
 ---
 ## Disclaimer
