@@ -10,8 +10,11 @@ import (
 	"syscall"
 
 	"github.com/vishvananda/netlink"
+	"go.mod/internal/flowtable"
 	"go.mod/internal/probe"
 )
+
+var verboseMode bool
 
 /*
 Main function, runs the entire program. It's mostly easy to understand,
@@ -19,7 +22,10 @@ so won't document much here
 */
 func main() {
 	ifaceFlag := flag.String("i", "eth0", "interface to attach the probe to")
+	flag.BoolVar(&verboseMode, "v", false, "Enable verbose mode")
 	flag.Parse()
+
+	flowtable.SetVerboseMode(verboseMode)
 
 	iface, ok := netlink.LinkByName(*ifaceFlag) // Attaches the name introduced to an actual understandable var
 

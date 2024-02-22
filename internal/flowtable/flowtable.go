@@ -18,6 +18,8 @@ import (
 	"go.mod/internal/timer"
 )
 
+var verboseMode bool
+
 type FlowTable struct {
 	Ticker *time.Ticker
 	sync.Map
@@ -37,7 +39,9 @@ func (ft *FlowTable) Get(hash uint64) (uint64, bool) {
 
 	// If the key is not in the map, return this (0, false)
 	if !ok {
-		fmt.Printf("This hash (%v) is not in flow table\n", hash)
+		if verboseMode {
+			fmt.Printf("This hash (%v) is not in flow table\n", hash)
+		}
 		return 0, ok
 	}
 	return val.(uint64), ok
@@ -49,7 +53,9 @@ func (ft *FlowTable) Remove(hash uint64) {
 	if isFound {
 		ft.Delete(hash)
 	} else {
-		fmt.Printf("hash %v is not in flow table\n", hash)
+		if verboseMode {
+			fmt.Printf("hash %v is not in flow table\n", hash)
+		}
 	}
 }
 
@@ -60,7 +66,9 @@ func (ft *FlowTable) Flush() {
 
 	ft.Range(func(hash, timestamp interface{}) bool {
 		if (now-timestamp.(uint64))/1000000 > 10000 {
-			fmt.Printf("Removing old entry from flow table: %v", hash)
+			if verboseMode {
+				fmt.Printf("Removing old entry from flow table: %v", hash)
+			}
 
 			ft.Remove(hash.(uint64))
 
@@ -68,4 +76,8 @@ func (ft *FlowTable) Flush() {
 		}
 		return false
 	})
+}
+
+func SetVerboseMode(v bool) {
+	verboseMode = v
 }
