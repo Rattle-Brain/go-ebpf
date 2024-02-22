@@ -2,8 +2,8 @@ package main
 
 import (
 	"context"
+	"flag"
 	"fmt"
-	"log"
 	"net"
 	"os"
 	"os/signal"
@@ -18,17 +18,17 @@ Main function, runs the entire program. It's mostly easy to understand,
 so won't document much here
 */
 func main() {
-	var stringInterface string // Defines the interface variable. Will store the interface selected by the user
-	fmt.Println("Type the network interface to listen on (e.j eth0):")
-	fmt.Scanln(&stringInterface)
+	ifaceFlag := flag.String("i", "eth0", "interface to attach the probe to")
+	flag.Parse()
 
-	iface, ok := netlink.LinkByName(stringInterface) // Attaches the name introduced to an actual understandable var
+	iface, ok := netlink.LinkByName(*ifaceFlag) // Attaches the name introduced to an actual understandable var
 
 	// If the function fails, most likely the iface introduced is wrong, so we display
 	// all the ifaces available to monitor in the computer
-	if ok == nil {
-		fmt.Printf("Could not find %s interface\n", stringInterface)
+	if ok != nil {
+		fmt.Printf("Could not find %s interface\n", *ifaceFlag)
 		dispAvailableIfaces()
+		os.Exit(1)
 	}
 
 	// Now we set the program to run in the background
@@ -37,6 +37,7 @@ func main() {
 	prb, err := probe.NewProbe(iface)
 	if err != nil {
 		fmt.Printf("Error wihle creating the probe\n")
+		os.Exit(1)
 	}
 
 	// And define a func that handles the CTRL+C shortcut to
@@ -44,7 +45,8 @@ func main() {
 	signalHandler(ctrl_c)
 
 	if err := prb.Run(ctx, iface); err != nil {
-		log.Fatalf("Failed running the probe: %v", err)
+		fmt.Printf("Failed running the probe: %v", err)
+		os.Exit(1)
 	}
 }
 

@@ -31,7 +31,7 @@ type probe struct {
 }
 
 func (prb *probe) loadObjects() error {
-	fmt.Printf("Loading probe object to kernel")
+	fmt.Println("Loading probe object to kernel")
 
 	objs := probeObjects{}
 
@@ -60,7 +60,7 @@ func setMEMLimit() error {
 }
 
 func (prb *probe) createQdisc() error {
-	fmt.Printf("Creating qdisc")
+	fmt.Println("Creating qdisc")
 
 	// We create a new qdisc -> clsact with the parameters we need
 	prb.qdisc = clsact.NewClsAct(&netlink.QdiscAttrs{
@@ -158,7 +158,7 @@ func NewProbe(iface netlink.Link) (*probe, error) {
 	// We try to load the eBPF objects and check for errors
 	err = prb.loadObjects()
 	if err != nil {
-		fmt.Printf("Failed loading probe objects: %v", err)
+		fmt.Printf("Failed loading probe objects: %v\n", err)
 		return nil, err
 	}
 

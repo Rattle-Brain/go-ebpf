@@ -10,6 +10,8 @@ eBPF technology has gained popularity in recent years due to its ability to prov
 
 This project aims to provide a starting point for those who want to explore eBPF with Go. It provides simple examples of how to write eBPF programs using Go and how to load and execute them in the kernel.
 
+Additionally, the program included in this repository demonstrates a practical use case of eBPF technology. It activates a filter that captures network packets using both TCP and UDP protocols. Each captured packet is printed to the standard output in different colors to differentiate between TCP (displayed in yellow) and UDP (displayed in cyan) packets.
+
 ## Features
 
 - Examples of eBPF programs written in Go.
