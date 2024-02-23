@@ -11,14 +11,12 @@ information. Especifically, we want to store info in a Map structure, with a
 hash as a key and the timestamp of a packet as the value.
 */
 import (
-	"fmt"
 	"sync"
 	"time"
 
+	"go.mod/dbg"
 	"go.mod/internal/timer"
 )
-
-var verboseMode bool
 
 type FlowTable struct {
 	Ticker *time.Ticker
@@ -39,9 +37,7 @@ func (ft *FlowTable) Get(hash uint64) (uint64, bool) {
 
 	// If the key is not in the map, return this (0, false)
 	if !ok {
-		if verboseMode {
-			fmt.Printf("This hash (%v) is not in flow table\n", hash)
-		}
+		dbg.DebugPrintf("This hash (%v) is not in flow table\n", hash)
 		return 0, ok
 	}
 	return val.(uint64), ok
@@ -53,9 +49,7 @@ func (ft *FlowTable) Remove(hash uint64) {
 	if isFound {
 		ft.Delete(hash)
 	} else {
-		if verboseMode {
-			fmt.Printf("hash %v is not in flow table\n", hash)
-		}
+		dbg.DebugPrintf("hash %v is not in flow table\n", hash)
 	}
 }
 
@@ -66,9 +60,7 @@ func (ft *FlowTable) Flush() {
 
 	ft.Range(func(hash, timestamp interface{}) bool {
 		if (now-timestamp.(uint64))/1000000 > 10000 {
-			if verboseMode {
-				fmt.Printf("Removing old entry from flow table: %v", hash)
-			}
+			dbg.DebugPrintf("Removing old entry from flow table: %v\n", hash)
 
 			ft.Remove(hash.(uint64))
 
@@ -76,8 +68,4 @@ func (ft *FlowTable) Flush() {
 		}
 		return false
 	})
-}
-
-func SetVerboseMode(v bool) {
-	verboseMode = v
 }

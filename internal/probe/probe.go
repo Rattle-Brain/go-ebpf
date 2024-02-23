@@ -3,10 +3,13 @@ package probe
 import (
 	"context"
 	"fmt"
+	"os"
 
 	"github.com/cilium/ebpf/ringbuf"
 	"github.com/vishvananda/netlink"
 	"go.mod/clsact"
+	"go.mod/dbg"
+	"go.mod/file"
 	"go.mod/internal/flowtable"
 	"go.mod/internal/packet"
 	"golang.org/x/sys/unix"
@@ -21,6 +24,10 @@ into golang code for it to be used.
 const tenMegaBytes = 1024 * 1024 * 10
 const twentyMegaBytes = tenMegaBytes * 2
 const fortyMegaBytes = twentyMegaBytes * 2
+
+var fileName string
+var dataFile *os.File
+var existsFile bool = false
 
 type probe struct {
 	iface      netlink.Link
@@ -51,7 +58,7 @@ whereas the maximun, corresponding to the Max field
 is set to 40MB
 */
 func setMEMLimit() error {
-	fmt.Println("Setting rlimit")
+	dbg.DebugPrintln("Setting rlimit")
 
 	return unix.Setrlimit(unix.RLIMIT_MEMLOCK, &unix.Rlimit{
 		Cur: twentyMegaBytes,
@@ -60,7 +67,7 @@ func setMEMLimit() error {
 }
 
 func (prb *probe) createQdisc() error {
-	fmt.Println("Creating qdisc")
+	dbg.DebugPrintln("Creating qdisc")
 
 	// We create a new qdisc -> clsact with the parameters we need
 	prb.qdisc = clsact.NewClsAct(&netlink.QdiscAttrs{
@@ -87,7 +94,7 @@ addFilter that inserts the filter, and another func that creates all
 the filters, createFilters.
 */
 func (prb *probe) createFilters() error {
-	fmt.Printf("Creating qdisc filters")
+	dbg.DebugPrintln("Creating qdisc filters")
 
 	// Ingress and egress filters for IPv4
 	addFilter(prb, netlink.FilterAttrs{
@@ -141,7 +148,7 @@ func addFilter(prb *probe, net netlink.FilterAttrs) {
 
 // Function to create a new probe given a network interface
 func NewProbe(iface netlink.Link) (*probe, error) {
-	fmt.Println("Creating a new probe")
+	dbg.DebugPrintln("Creating a new probe")
 	handle, err := netlink.NewHandle(unix.NETLINK_ROUTE)
 
 	if err != nil {
@@ -186,8 +193,22 @@ This runs the probe within the context and attaches it to the
 interface received through parameter
 */
 func (prb *probe) Run(ctx context.Context, iface netlink.Link) error {
-	fmt.Println("Starting up the probe")
-	err := setMEMLimit()
+	dbg.DebugPrintln("Starting up the probe")
+	var err error
+
+	if fileName != "" {
+		dataFile, err = file.OpenFile(fileName)
+		if err != nil {
+			dbg.DebugPrintln("File name did not exist. Creating one...")
+			dataFile, _ := file.CreateFile(fileName)
+			if dataFile == nil {
+				os.Exit(1)
+			}
+		}
+		existsFile = true
+	}
+
+	err = setMEMLimit()
 	if err != nil {
 		fmt.Printf("Failed setting rlimit: %v", err)
 		return err
@@ -239,7 +260,11 @@ func (prb *probe) Run(ctx context.Context, iface netlink.Link) error {
 				fmt.Printf("Could not unmarshall packet: %+v", pkt)
 				continue
 			}
-			packet.CalcLatency(packetAttrs, ft)
+			ts := packet.CalcLatency(packetAttrs, ft)
+			latency := float64(packetAttrs.TimeStamp) - float64(ts)/packet.TO_SEC_FROM_NANO
+			if existsFile {
+				file.AppendToFile(dataFile, packetAttrs, latency)
+			}
 		}
 	}
 }
@@ -251,20 +276,32 @@ information stored in the clsact, as well as
 removing entries from the flow table
 */
 func (p *probe) Close() error {
-	fmt.Println("Removing qdisc")
+	dbg.DebugPrintln("Removing qdisc")
 	if err := p.handle.QdiscDel(p.qdisc); err != nil {
 		fmt.Println("Failed deleting qdisc")
 		return err
 	}
 
-	fmt.Println("Deleting handle")
+	dbg.DebugPrintln("Deleting handle")
 	p.handle.Delete()
 
-	fmt.Println("Closing eBPF object")
+	dbg.DebugPrintln("Closing eBPF object")
 	if err := p.bpfObjects.Close(); err != nil {
 		fmt.Println("Failed closing eBPF object")
 		return err
 	}
 
+	if existsFile {
+		dbg.DebugPrintln("Closing CSV file")
+		err := file.CloseFile(dataFile)
+		if err != nil {
+			fmt.Println("Failed closing the CSV file")
+			return err
+		}
+	}
 	return nil
+}
+
+func SetFileName(name string) {
+	fileName = name
 }

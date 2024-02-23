@@ -10,22 +10,27 @@ import (
 	"syscall"
 
 	"github.com/vishvananda/netlink"
-	"go.mod/internal/flowtable"
+	"go.mod/dbg"
 	"go.mod/internal/probe"
 )
 
 var verboseMode bool
+var fileName string
 
 /*
 Main function, runs the entire program. It's mostly easy to understand,
 so won't document much here
 */
 func main() {
+	// Establish flags for the program to use
 	ifaceFlag := flag.String("i", "eth0", "interface to attach the probe to")
 	flag.BoolVar(&verboseMode, "v", false, "Enable verbose mode")
+	flag.StringVar(&fileName, "f", "", "Create a CSV file to dump the data collected by the interceptor")
 	flag.Parse()
 
-	flowtable.SetVerboseMode(verboseMode)
+	// Send the variables to where they're needed
+	dbg.SetVerboseMode(verboseMode)
+	probe.SetFileName(fileName)
 
 	iface, ok := netlink.LinkByName(*ifaceFlag) // Attaches the name introduced to an actual understandable var
 
