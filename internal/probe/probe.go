@@ -38,7 +38,7 @@ type probe struct {
 }
 
 func (prb *probe) loadObjects() error {
-	fmt.Println("Loading probe object to kernel")
+	dbg.DebugPrintln("Loading probe object to kernel")
 
 	objs := probeObjects{}
 
@@ -200,10 +200,12 @@ func (prb *probe) Run(ctx context.Context, iface netlink.Link) error {
 		dataFile, err = file.OpenFile(fileName)
 		if err != nil {
 			dbg.DebugPrintln("File name did not exist. Creating one...")
-			dataFile, _ := file.CreateFile(fileName)
-			if dataFile == nil {
+			err := file.CreateFile(fileName)
+			if err != nil {
+				fmt.Println("Couldn't create the file. Exiting...")
 				os.Exit(1)
 			}
+			dataFile, _ = file.OpenFile(fileName)
 		}
 		existsFile = true
 	}
@@ -261,7 +263,7 @@ func (prb *probe) Run(ctx context.Context, iface netlink.Link) error {
 				continue
 			}
 			ts := packet.CalcLatency(packetAttrs, ft)
-			latency := float64(packetAttrs.TimeStamp) - float64(ts)/packet.TO_SEC_FROM_NANO
+			latency := (float64(packetAttrs.TimeStamp) - float64(ts)) / packet.TO_SEC_FROM_NANO
 			if existsFile {
 				file.AppendToFile(dataFile, packetAttrs, latency)
 			}

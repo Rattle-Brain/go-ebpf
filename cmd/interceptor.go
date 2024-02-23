@@ -56,7 +56,7 @@ func main() {
 	signalHandler(ctrl_c)
 
 	if err := prb.Run(ctx, iface); err != nil {
-		fmt.Printf("Failed running the probe: %v", err)
+		fmt.Printf("Failed running the probe: %v\n", err)
 		os.Exit(1)
 	}
 }
