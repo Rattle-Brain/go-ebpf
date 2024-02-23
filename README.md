@@ -57,6 +57,11 @@ By default will choose a Network Interface named *eth0*. To manually select anot
 sudo ./interceptor -i enp0s3
 ```
 
+Also, you can dump all the intercepted data to a CSV file in case you need it to process that information.
+
+```bash
+sudo ./interceptor -i enp0s3 -f dump.csv
+```
 **Since we are using eBPF at kernel level, we need to grant the program root privileges, if not run with sudo, it will not work.**
 
 ---
