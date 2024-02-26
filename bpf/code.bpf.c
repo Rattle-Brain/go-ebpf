@@ -196,19 +196,17 @@ int interceptor(struct __sk_buff* skb) {
         case IPPROTO_TCP:
             tcp = head + offset;
             // If the packet is syn or syn/ack, we get also those flags and the ports.
-            //if (tcp->syn) {
-                pkt.src_port = tcp->source;
-                pkt.dst_port = tcp->dest;
-                pkt.syn = tcp->syn;
-                pkt.ack = tcp->ack;
-                // bpf_ktime_get_ns is to know latency of the packet
-                pkt.ts = bpf_ktime_get_ns();
+            pkt.src_port = tcp->source;
+            pkt.dst_port = tcp->dest;
+            pkt.syn = tcp->syn;
+            pkt.ack = tcp->ack;
+            // bpf_ktime_get_ns is to know latency of the packet
+            pkt.ts = bpf_ktime_get_ns();
 
-                // Then, once built, we send the packet to de user space
-                if (bpf_ringbuf_output(&pipe, &pkt, sizeof(pkt), 0) < 0) {
-                    return TC_ACT_OK;
-                }
-            //} 
+            // Then, once built, we send the packet to de user space
+            if (bpf_ringbuf_output(&pipe, &pkt, sizeof(pkt), 0) < 0) {
+                return TC_ACT_OK;
+            }
             break;
 
         /*

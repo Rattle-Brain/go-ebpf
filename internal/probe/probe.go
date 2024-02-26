@@ -262,10 +262,10 @@ func (prb *probe) Run(ctx context.Context, iface netlink.Link) error {
 				fmt.Printf("Could not unmarshall packet: %+v", pkt)
 				continue
 			}
-			ts := packet.CalcLatency(packetAttrs, ft)
-			latency := (float64(packetAttrs.TimeStamp) - float64(ts)) / packet.TO_SEC_FROM_NANO
+			latency := packet.CalcLatency(packetAttrs, ft)
 			if existsFile {
 				file.AppendToFile(dataFile, packetAttrs, latency)
+				dbg.DebugPrintf("Latency: %f\n", latency)
 			}
 		}
 	}

@@ -146,8 +146,9 @@ You may also notice the value TO_SEC_FROM_NANO which takes as value 1M
 because in every second there's a million nanosecs, so thats the factor
 we have to use to transform the ns received into seconds
 */
-func CalcLatency(pkt Packet, ft *flowtable.FlowTable) uint64 {
+func CalcLatency(pkt Packet, ft *flowtable.FlowTable) float64 {
 
+	var latency float64
 	prot := pkt.Protocol
 	pktHash := pkt.KeyGen() // This generates the hash, or key, for the map
 
@@ -155,12 +156,12 @@ func CalcLatency(pkt Packet, ft *flowtable.FlowTable) uint64 {
 
 	if !ok && prot == TCP {
 		ft.Add(pktHash, pkt.TimeStamp)
-		return ts
+		return 0
 	} else if !ok && prot == UDP {
 		ft.Add(pktHash, pkt.TimeStamp)
-		return ts
+		return 0
 	} else if !ok {
-		return ts
+		return 0
 	}
 
 	if prot == TCP {
@@ -172,7 +173,6 @@ func CalcLatency(pkt Packet, ft *flowtable.FlowTable) uint64 {
 			pkt.TTL,
 			(float64(pkt.TimeStamp)-float64(ts))/TO_SEC_FROM_NANO,
 		)
-		ft.Remove(pktHash)
 	} else if prot == UDP {
 		color.Cyan("UDP | src: %v:%-7v\tdst: %v:%-9v\tTTL: %-4v\tlatency: %.3f ms\n",
 			pkt.DstIP.Unmap().String(),
@@ -182,7 +182,9 @@ func CalcLatency(pkt Packet, ft *flowtable.FlowTable) uint64 {
 			pkt.TTL,
 			(float64(pkt.TimeStamp)-float64(ts))/TO_SEC_FROM_NANO,
 		)
-		ft.Remove(pktHash)
 	}
-	return ts
+
+	ft.Remove(pktHash)
+	latency = (float64(pkt.TimeStamp) - float64(ts)) / TO_SEC_FROM_NANO
+	return latency
 }
