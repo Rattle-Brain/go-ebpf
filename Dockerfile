@@ -21,4 +21,4 @@ RUN apt update && apt upgrade
 
 
 # Run the binary when the container starts
-CMD ["./interceptor -i enp0s3"]
+CMD ["./interceptor]
