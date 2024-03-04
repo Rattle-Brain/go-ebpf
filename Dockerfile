@@ -2,7 +2,7 @@
 FROM golang:1.21.7 AS builder
 
 # Set the working directory inside the container
-WORKDIR /app
+WORKDIR /app/
 
 # Copy the Go module files and download dependencies
 COPY go.mod .
@@ -15,22 +15,17 @@ COPY . .
 # Build the Go application
 RUN go build -ldflags "-s -w" -o interceptor cmd/interceptor
 
-# Use a base image with the necessary eBPF development tools
-FROM ubuntu:latest
-
-# Set environment variables
-ENV DEBIAN_FRONTEND=noninteractive
-
 # Update package lists and install required packages
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-    clang \
-    llvm \
-    libelf-dev \
-    libbpfcc-dev \
-    bpfcc-tools \
-    iproute2 \
-    && rm -rf /var/lib/apt/lists/*
+RUN sudo apt install linux-headers-$(uname -r) \
+                 libbpfcc-dev \
+                 libbpf-dev \
+                 llvm \
+                 clang \
+                 gcc-multilib \
+                 build-essential \
+                 linux-tools-$(uname -r) \
+                 linux-tools-common \
+                 linux-tools-generic
 
 # Set the working directory inside the container
 WORKDIR /app
