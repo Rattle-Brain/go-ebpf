@@ -62,6 +62,16 @@ Also, you can dump all the intercepted data to a CSV file in case you need it to
 ```bash
 sudo ./interceptor -i enp0s3 -f dump.csv
 ```
+
+### Experimental
+
+Alternatively, you could run the Docker Image by executing the following commands in the prompt. This feature is still a work in progress, so don't expect
+it to be fully functional
+```bash
+sudo docker build -t goebpf .
+sudo docker run --privileged goebpf
+```
+
 **Since we are using eBPF at kernel level, we need to grant the program root privileges, if not run with sudo, it will not work.**
 
 ---

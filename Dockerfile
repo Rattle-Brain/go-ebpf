@@ -21,4 +21,4 @@ RUN apt update && apt upgrade
 
 
 # Run the binary when the container starts
-CMD ["./interceptor"]
+CMD ["./interceptor", "-i", "eth0", "-v", "-f", "docker_dump.csv"]
