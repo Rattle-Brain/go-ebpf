@@ -16,9 +16,5 @@ COPY . .
 # Build the Go application
 RUN go build -ldflags "-s -w" -o interceptor ./cmd/interceptor.go
 
-# Update package lists and install required packages
-RUN apt update && apt upgrade
-
-
 # Run the binary when the container starts
-CMD ["./interceptor", "-i", "eth0", "-v", "-f", "docker_dump.csv"]
+ENTRYPOINT ["./interceptor"]
