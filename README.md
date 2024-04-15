@@ -1,5 +1,5 @@
 # Go eBPF
-<div style="overflow: hidden;">
+<div style="clear:both;">
   <img src="https://ebpf-go.dev/ebpf-go.png" align="right" title="Go-eBPF Logo">
 </div>
 
