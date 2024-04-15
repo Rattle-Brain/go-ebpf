@@ -1,6 +1,8 @@
 # Go eBPF
-<img src="https://ebpf-go.dev/ebpf-go.png" align="right"
-     title="Master Hacker logo">
+<div style="position: relative;">
+  <img src="https://ebpf-go.dev/ebpf-go.png" alt="Image" style="position: absolute; top: 0; left: 0;">
+</div>
+
      
 This repository is a test project designed to get familiar with eBPF (Extended Berkeley Packet Filter) technology using the Go programming language.
 
