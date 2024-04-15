@@ -1,11 +1,10 @@
 # Go eBPF
-<div style="clear:both;">
-  <img src="https://ebpf-go.dev/ebpf-go.png" align="right" title="Go-eBPF Logo">
-</div>
 
 This repository is a test project designed to get familiar with eBPF (Extended Berkeley Packet Filter) technology using the Go programming language.
 
 ## Description
+
+<img src="https://ebpf-go.dev/ebpf-go.png" align="right" title="Go-eBPF Logo">
 
 eBPF technology has gained popularity in recent years due to its ability to provide a secure and efficient framework for programming in the Linux kernel. It allows developers to write small programs that run in the kernel and can intercept and modify system events in real-time, such as network traffic or system events.
 
