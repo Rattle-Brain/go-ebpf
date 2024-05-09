@@ -10,7 +10,7 @@ eBPF technology has gained popularity in recent years due to its ability to prov
 
 This project aims to provide a starting point for those who want to explore eBPF with Go. It provides some not-so-simple examples of how to write eBPF programs using Go and how to load and execute them in the kernel.
 
-To load the eBPF objects into Go, transforming eBPF bytecode into something Golang is capable of understaiding we use Cilium's [eBPF2Go](https://github.com/cilium/ebpf/tree/main/cmd/bpf2g)
+To load the eBPF objects into Go, transforming eBPF bytecode into something Golang is capable of understaiding we use Cilium's [eBPF2Go](https://github.com/cilium/ebpf/tree/main/cmd/bpf2go)
 
 ## Features
 
