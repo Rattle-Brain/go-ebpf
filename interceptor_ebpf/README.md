@@ -1,16 +1,12 @@
-# Go eBPF
+# eBPF Network Interceptor
 
 This is a Network Interceptor that allows you to see incoming and outgoing traffic with minimal performance overhead
 
 ## Description
 
-<img src="https://ebpf-go.dev/ebpf-go.png" align=right>
+Leveraging the power of eBPF (Extended Berkeley Packet Filter), this Network Interceptor offers efficient and high-performance packet capture and analysis capabilities. With color-coded output for TCP and UDP packets, Interceptor simplifies packet visualization and enables users to gain valuable insights into network traffic patterns.
 
-eBPF technology has gained popularity in recent years due to its ability to provide a secure and efficient framework for programming in the Linux kernel. It allows developers to write small programs that run in the kernel and can intercept and modify system events in real-time, such as network traffic or system events.
-
-This project aims to provide a starting point for those who want to explore eBPF with Go. It provides simple examples of how to write eBPF programs using Go and how to load and execute them in the kernel.
-
-Additionally, the program included in this repository demonstrates a practical use case of eBPF technology. It activates a filter that captures network packets using both TCP and UDP protocols. Each captured packet is printed to the standard output in different colors to differentiate between TCP (displayed in yellow) and UDP (displayed in cyan) packets.
+This allows you to know the source and destination IP and Port of each packet that comes and leaves your machine, as well as its protocol (TCP displayed in yellow and UDP displayed in cyan) in a very efficient way.
 
 ## Features
 
