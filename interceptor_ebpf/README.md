@@ -1,11 +1,10 @@
 # Go eBPF
 
-![Go eBPF Logo](https://ebpf-go.dev/ebpf-go.png)
-
 This is a Network Interceptor that allows you to see incoming and outgoing traffic with minimal performance overhead
 
-
 ## Description
+
+<img src="https://ebpf-go.dev/ebpf-go.png" align=right>
 
 eBPF technology has gained popularity in recent years due to its ability to provide a secure and efficient framework for programming in the Linux kernel. It allows developers to write small programs that run in the kernel and can intercept and modify system events in real-time, such as network traffic or system events.
 
