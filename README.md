@@ -4,16 +4,18 @@ This repository contains several completely functional and well documented Kerne
 
 ## Description
 
-<img src="https://ebpf-go.dev/ebpf-go.png", align=right>
+<img src="https://ebpf-go.dev/ebpf-go.png" align=right>
 
 eBPF technology has gained popularity in recent years due to its ability to provide a secure and efficient framework for programming in the Linux kernel. It allows developers to write small programs that run in the kernel and can intercept and modify system events in real-time, such as network traffic or system events.
 
-This project aims to provide a starting point for those who want to explore eBPF with Go. It provides simple examples of how to write eBPF programs using Go and how to load and execute them in the kernel.
+This project aims to provide a starting point for those who want to explore eBPF with Go. It provides some not-so-simple examples of how to write eBPF programs using Go and how to load and execute them in the kernel.
+
+To load the eBPF objects into Go, transforming eBPF bytecode into something Golang is capable of understaiding we use Cilium's [eBPF2Go](https://github.com/cilium/ebpf/tree/main/cmd/bpf2g)
 
 ## Features
 
 - Examples of eBPF programs written in Go.
-- The utilities needed to load eBPF programs in go come from [Cilium](https://github.com/cilium/ebpf/tree/main/cmd/bpf2go).
+- The utilities needed to load eBPF programs in go come from [Cilium](https://github.com/cilium/ebpf).
 
 ## Prerequisites
 
