@@ -35,7 +35,7 @@ git clone https://github.com/Rattle-Brain/go-ebpf.git
 Navigate to the directory of the program you want to compile and build the code. As an example:
 
 ```bash
-cd execv_ebpf
+cd sra-monitor_ebpf
 go build -o sra-monitor ./cmd/main.go ./cmd/monitor_bpfel.go 
 ```
 
@@ -47,8 +47,16 @@ Once the compilation is successful, run the following command to execute the gen
 
 
 ```bash
-
 sudo ./sra-monitor
+```
+
+### Note:
+
+You may need to regenerate the vmlinux.h header file. For that, run the following command (make sure you have `bpftool` installed on your system)
+**while in the `sra-monitor_ebpf` directory**
+
+```bash
+bpftool btf dump file /sys/kernel/btf/vmlinux format c > ./bpf/vmlinux.h                                                 
 ```
 
 ## Contributing
@@ -63,7 +71,7 @@ Contributions to the eBPF Sensitive Resource Access Monitoring project are welco
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License - see the [LICENSE](/go-ebpf/LICENSE) file for details.
 
 ---
 ## Disclaimer
