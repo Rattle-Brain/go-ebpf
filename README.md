@@ -2,6 +2,8 @@
 
 This repository contains several completely functional and well documented KernelSpace eBPF programs and its UserSpace counterpart written in Golang.
 
+Initially this repository was meant for personal use to get familiar with the eBPF technology, and still is. Most of the programs and tools here are incredibly simple and don't aim for professional use however, it's come a long way since the beginning and thought some more people might find it useful.
+
 ## Description
 
 <img src="https://ebpf-go.dev/ebpf-go.png" align=right>
