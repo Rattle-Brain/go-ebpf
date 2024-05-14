@@ -71,7 +71,7 @@ Contributions to the eBPF Sensitive Resource Access Monitoring project are welco
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](/go-ebpf/LICENSE) file for details.
+This project is licensed under the [MIT License](../LICENSE).
 
 ---
 ## Disclaimer
