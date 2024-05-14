@@ -1,0 +1,11 @@
+/etc/shadow
+/etc/passwd
+/etc/gshadow
+/etc/hosts
+/etc/crontab
+/etc/group
+/etc/hosts
+/etc/hosts.allow
+/etc/hosts.deny
+/etc/sysctl.conf
+/etc/sudoers
