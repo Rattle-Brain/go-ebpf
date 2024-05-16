@@ -13,6 +13,8 @@ to use it:
 #define LEN_FILENAME 64
 #define LEN_COMM 16
 
+#define MAX_ENTRIES 1024
+
 // Macro that allows to obtain the PID
 #define GETPID(x) x >> 32
 
@@ -37,6 +39,9 @@ struct data_exit {
 // Perf map to store events (data_enter/data_exit)
 struct {
     __uint(type, BPF_MAP_TYPE_PERF_EVENT_ARRAY);
+    __uint(key_size, sizeof(u32));
+    __uint(value_size, sizeof(u32));
+    __uint(max_entries, MAX_ENTRIES);
 } file_event_map SEC(".maps");
 
 SEC("tracepoint/syscalls/sys_enter_open")
@@ -80,8 +85,7 @@ int trace_exit_open(struct pt_regs *ctx){
     
     return 0;
 }
-
-
+/*
 SEC("tracepoints/syscalls/sys_enter_read")
 int trace_enter_read(struct pt_regs *ctx) {
     struct data_enter dat = {};
@@ -166,6 +170,7 @@ int trace_exit_write(struct pt_regs *ctx){
     
     return 0;
 }
+*/
 
 /*
 Cool original idea but ingored for the moment.
