@@ -71,7 +71,7 @@ struct entry_args_t {
 };
 
 // Exit arguments. 
-// Documentation in /sys/kernel/tracing/events/syscalls/sys_exit_open
+// Documentation in /sys/kernel/tracing/events/syscalls/sys_enter_open
 struct exit_args_t {
     char _padding1[16];
 
@@ -90,10 +90,10 @@ int trace_enter_open(struct entry_args_t *ctx) {
     dat.timestamp = bpf_ktime_get_ns();
 
     // Get the process that called the sys_open syscall
-    bpf_get_current_comm(&dat.comm, LEN_COMM);
+    bpf_get_current_comm(&dat.comm, sizeof(dat.comm));
 
     // Get the filename that was accessed
-    bpf_probe_read_user_str(&dat.filename, LEN_FILENAME, ctx->filename);
+    bpf_probe_read_user_str(&dat.filename, sizeof(dat.filename), ctx->filename);
 
     // Output contents to perfmap
     bpf_perf_event_output(ctx, &file_event_map, BPF_F_CURRENT_CPU, &dat, sizeof(dat));

@@ -70,7 +70,7 @@ func main() {
 
 	// Attach tracepoint to sys_enter_open
 	fmt.Println("\nAttaching tracepoints...")
-	tpEnterOpen, err := link.Tracepoint("syscalls", "sys_enter_open", objs.monitorPrograms.TraceEnterOpen, nil)
+	tpEnterOpen, err := link.Tracepoint("syscalls", "sys_enter_openat", objs.monitorPrograms.TraceEnterOpen, nil)
 	if err != nil {
 		log.Fatalf("Attaching tracepoint sys_enter_open: %v", err)
 		os.Exit(-2)
@@ -78,7 +78,7 @@ func main() {
 	defer tpEnterOpen.Close()
 
 	// Attach tracepoint to sys_exit_open
-	tpExitOpen, err := link.Tracepoint("syscalls", "sys_exit_open", objs.monitorPrograms.TraceExitOpen, nil)
+	tpExitOpen, err := link.Tracepoint("syscalls", "sys_exit_openat", objs.monitorPrograms.TraceExitOpen, nil)
 	if err != nil {
 		log.Fatalf("Attaching tracepoint sys_exit_open: %v", err)
 		os.Exit(-3)
@@ -107,7 +107,7 @@ func main() {
 	for {
 		record, err := rd.Read()
 		if err != nil {
-			log.Printf("reading from ring buffer: %v", err)
+			log.Printf("Reading from ring buffer: %v", err)
 			continue
 		}
 
@@ -116,7 +116,7 @@ func main() {
 		buf := bytes.NewBuffer(record.RawSample)
 
 		// Determine the type of event based on the size of the record
-		if buf.Len() == binary.Size(DataEnter{}) {
+		if buf.Len() == 100 {
 			err = binary.Read(buf, binary.LittleEndian, &evt)
 			if err != nil {
 				log.Printf("parsing ring buffer event: %v", err)
@@ -128,7 +128,7 @@ func main() {
 
 			fmt.Printf("ENTER: Time: %s, PID: %d, UID: %d, User: %s, Comm: %s, Filename: %s\n",
 				timestamp.Format(time.RFC3339), evt.PID, evt.UID, username, string(evt.Comm[:]), string(evt.Filename[:]))
-		} else if buf.Len() == binary.Size(DataExit{}) {
+		} else if buf.Len() == 44 {
 			err = binary.Read(buf, binary.LittleEndian, &evtExit)
 			if err != nil {
 				log.Printf("parsing ring buffer event: %v", err)
