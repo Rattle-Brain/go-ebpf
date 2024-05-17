@@ -52,19 +52,24 @@ func getUsernameFromUid(uid uint32) string {
 }
 
 func main() {
+	fmt.Println("Setting memory limit...")
 	setLimit()
+	fmt.Println("Done!")
 
 	// Create monitor ebpf objects
 	objs := monitorObjects{}
 
 	// And load them into userspace (check for errors)
+	fmt.Println("\nLoading eBPF objects...")
 	if err := loadMonitorObjects(&objs, nil); err != nil {
 		log.Fatalf("Loading objects: %v", err)
 		os.Exit(-1)
 	}
 	defer objs.Close() // Need to be closed after
+	fmt.Println("Done!")
 
 	// Attach tracepoint to sys_enter_open
+	fmt.Println("\nAttaching tracepoints...")
 	tpEnterOpen, err := link.Tracepoint("syscalls", "sys_enter_open", objs.monitorPrograms.TraceEnterOpen, nil)
 	if err != nil {
 		log.Fatalf("Attaching tracepoint sys_enter_open: %v", err)
@@ -79,6 +84,7 @@ func main() {
 		os.Exit(-3)
 	}
 	defer tpExitOpen.Close()
+	fmt.Println("Done!")
 
 	/**
 	TODO:
@@ -88,13 +94,16 @@ func main() {
 	*/
 
 	// Create a reader able to extract info from the map
+	fmt.Println("\nCreating reader...")
 	rd, err := perf.NewReader(objs.FileEventMap, os.Getpagesize())
 	if err != nil {
 		log.Fatalf("Opening ring buffer reader: %v", err)
 		os.Exit(-4)
 	}
 	defer rd.Close()
+	fmt.Println("Done!")
 
+	fmt.Println("\neBPF programs attached. Waiting for events...")
 	for {
 		record, err := rd.Read()
 		if err != nil {

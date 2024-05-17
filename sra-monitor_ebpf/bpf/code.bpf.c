@@ -60,6 +60,8 @@ struct {
     __uint(max_entries, MAX_ENTRIES);
 } file_event_map SEC(".maps");
 
+// Entry arguments. 
+// Documentation in /sys/kernel/tracing/events/syscalls/sys_enter_open
 struct entry_args_t {
     char _padding1[16];
 
@@ -68,6 +70,8 @@ struct entry_args_t {
     umode_t mode;
 };
 
+// Exit arguments. 
+// Documentation in /sys/kernel/tracing/events/syscalls/sys_exit_open
 struct exit_args_t {
     char _padding1[16];
 
