@@ -10,6 +10,22 @@ to use it:
 #include <bpf/bpf_tracing.h>
 #include <bpf/bpf_core_read.h>
 
+/*
+#include <stdbool.h>
+#include <stdint.h>
+
+#include <linux/bpf.h>
+#include <linux/bpf_common.h>
+#include <linux/types.h>
+
+#include <bpf/bpf_endian.h>
+#include <bpf/bpf_helpers.h>
+#include <bpf/bpf_tracing.h>
+#include <bpf/libbpf_common.h>
+
+#include <asm/ptrace.h>
+*/
+
 #define LEN_FILENAME 64
 #define LEN_COMM 16
 
@@ -33,7 +49,7 @@ struct data_exit {
     u32 uid;
     char comm[LEN_COMM];
     u64 timestamp;
-    u64 ret_value;  // Return value
+    u32 ret_value;  // Return value
 };
 
 // Perf map to store events (data_enter/data_exit)
@@ -44,9 +60,25 @@ struct {
     __uint(max_entries, MAX_ENTRIES);
 } file_event_map SEC(".maps");
 
+struct entry_args_t {
+    char _padding1[16];
+
+    const char* filename;
+    int flags;
+    umode_t mode;
+};
+
+struct exit_args_t {
+    char _padding1[16];
+
+    long ret;
+};
+
 SEC("tracepoint/syscalls/sys_enter_open")
-int trace_enter_open(struct pt_regs *ctx) {
+int trace_enter_open(struct entry_args_t *ctx) {
     struct data_enter dat = {};
+
+    //libbpf_set_strict_mode(LIBBPF_STRICT_ALL);
 
     // Extract PID, UID and timestamp
     dat.pid = GETPID(bpf_get_current_pid_tgid());
@@ -54,10 +86,10 @@ int trace_enter_open(struct pt_regs *ctx) {
     dat.timestamp = bpf_ktime_get_ns();
 
     // Get the process that called the sys_open syscall
-    bpf_get_current_comm(&dat.comm, sizeof(dat.comm));
+    bpf_get_current_comm(&dat.comm, LEN_COMM);
 
     // Get the filename that was accessed
-    bpf_probe_read_user_str(&dat.filename, sizeof(dat.filename), (void *)PT_REGS_PARM1(ctx));
+    bpf_probe_read_user_str(&dat.filename, LEN_FILENAME, ctx->filename);
 
     // Output contents to perfmap
     bpf_perf_event_output(ctx, &file_event_map, BPF_F_CURRENT_CPU, &dat, sizeof(dat));
@@ -66,7 +98,7 @@ int trace_enter_open(struct pt_regs *ctx) {
 }
 
 SEC("tracepoint/syscalls/sys_exit_open")
-int trace_exit_open(struct pt_regs *ctx){
+int trace_exit_open(struct exit_args_t *ctx){
     struct data_exit dat= {};
 
     // Extract PID, UID and timestamp
@@ -78,7 +110,7 @@ int trace_exit_open(struct pt_regs *ctx){
     bpf_get_current_comm(&dat.comm, sizeof(dat.comm));
 
     // Extract the return value form *ctx
-    dat.ret_value = PT_REGS_RC(ctx);
+    dat.ret_value = ctx->ret;
 
     // Output contents to perfmap
     bpf_perf_event_output(ctx, &file_event_map, BPF_F_CURRENT_CPU, &dat, sizeof(dat));
