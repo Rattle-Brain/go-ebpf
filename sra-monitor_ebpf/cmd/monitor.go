@@ -83,46 +83,7 @@ func main() {
 	defer rd.Close()
 
 	fmt.Println("\neBPF programs attached. Waiting for events...")
-	for {
-		record, err := rd.Read()
-		if err != nil {
-			log.Printf("Reading from ring buffer: %v", err)
-			continue
-		}
-
-		var evt DataEnter
-		var evtExit DataExit
-		buf := bytes.NewBuffer(record.RawSample)
-
-		// Determine the type of event based on the size of the record
-		if buf.Len() == 100 {
-			err = binary.Read(buf, binary.LittleEndian, &evt)
-			if err != nil {
-				log.Printf("parsing ring buffer event: %v", err)
-				continue
-			}
-
-			username := getUsernameFromUid(evt.UID)
-			timestamp := time.Unix(0, int64(evt.Timestamp))
-
-			fmt.Printf("ENTER: Time: %s, PID: %d, UID: %d, User: %s, Comm: %s, Filename: %s\n",
-				timestamp.Format(time.RFC3339), evt.PID, evt.UID, username, string(evt.Comm[:]), string(evt.Filename[:]))
-		} else if buf.Len() == 44 {
-			err = binary.Read(buf, binary.LittleEndian, &evtExit)
-			if err != nil {
-				log.Printf("parsing ring buffer event: %v", err)
-				continue
-			}
-
-			username := getUsernameFromUid(evtExit.UID)
-			timestamp := time.Unix(0, int64(evtExit.Timestamp))
-
-			fmt.Printf("EXIT: Time: %s, PID: %d, UID: %d, User: %s, Comm: %s, Retval: %d\n",
-				timestamp.Format(time.RFC3339), evtExit.PID, evtExit.UID, username, string(evtExit.Comm[:]), evtExit.Retval)
-		} else {
-			log.Printf("unknown event size: %d", buf.Len())
-		}
-	}
+	readEvents(rd)
 }
 
 /*
@@ -165,4 +126,66 @@ func createRingBufferReader(objs monitorObjects) *perf.Reader {
 	}
 	fmt.Println("Done!")
 	return rd
+}
+
+/*
+Loops indefinetly to read events from the bpf map as they happen.
+*/
+func readEvents(rd *perf.Reader) {
+	for {
+		record, err := rd.Read()
+		if err != nil {
+			log.Printf("Reading from ring buffer: %v", err)
+			continue
+		}
+
+		var evt DataEnter
+		var evtExit DataExit
+		buf := bytes.NewBuffer(record.RawSample)
+
+		// Determine the type of event based on the size of the record
+		if buf.Len() == 100 {
+			parseEnterEvent(buf, &evt)
+		} else if buf.Len() == 44 {
+			parseExitEvent(buf, &evtExit)
+		} else {
+			log.Printf("unknown event size: %d", buf.Len())
+		}
+	}
+}
+
+/*
+Takes the byte stream from an entry in the buffer and parses it
+to fit the fields of the syscall_enter event
+*/
+func parseEnterEvent(buf *bytes.Buffer, evt *DataEnter) {
+	err := binary.Read(buf, binary.LittleEndian, evt)
+	if err != nil {
+		log.Printf("parsing ring buffer event: %v", err)
+		return
+	}
+
+	username := getUsernameFromUid(evt.UID)
+	timestamp := time.Unix(0, int64(evt.Timestamp))
+
+	fmt.Printf("ENTER: Time: %s, PID: %d, UID: %d, User: %s, Comm: %s, Filename: %s\n",
+		timestamp.Format(time.RFC3339), evt.PID, evt.UID, username, string(evt.Comm[:]), string(evt.Filename[:]))
+}
+
+/*
+Takes the byte stream from an entry in the buffer and parses it
+to fit the fields of the syscall_exit event
+*/
+func parseExitEvent(buf *bytes.Buffer, evtExit *DataExit) {
+	err := binary.Read(buf, binary.LittleEndian, evtExit)
+	if err != nil {
+		log.Printf("parsing ring buffer event: %v", err)
+		return
+	}
+
+	username := getUsernameFromUid(evtExit.UID)
+	timestamp := time.Unix(0, int64(evtExit.Timestamp))
+
+	fmt.Printf("EXIT: Time: %s, PID: %d, UID: %d, User: %s, Comm: %s, Retval: %d\n",
+		timestamp.Format(time.RFC3339), evtExit.PID, evtExit.UID, username, string(evtExit.Comm[:]), evtExit.Retval)
 }
