@@ -9,6 +9,7 @@ import (
 	"os/user"
 	"time"
 
+	"example.com/sra-monitor/internal/event"
 	"github.com/cilium/ebpf"
 	"github.com/cilium/ebpf/link"
 	"github.com/cilium/ebpf/perf"
@@ -102,15 +103,16 @@ func readEvents(rd *perf.Reader) {
 			continue
 		}
 
-		var evt DataEnter
-		var evtExit DataExit
+		//var evt DataEnter
+		//var evtExit DataExit
 		buf := bytes.NewBuffer(record.RawSample)
 
 		// Determine the type of event based on the size of the record
 		if buf.Len() == 108 {
-			parseEnterEvent(buf, &evt)
+			event.UnmarshallEntryEvent(record.RawSample)
+			//parseEnterEvent(buf, &evt)
 		} else if buf.Len() == 52 {
-			parseExitEvent(buf, &evtExit)
+			//parseExitEvent(buf, &evtExit)
 		} else {
 			log.Printf("unknown event size: %d", buf.Len())
 		}

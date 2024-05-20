@@ -1,6 +1,10 @@
 package event
 
-import "encoding/binary"
+import (
+	"encoding/binary"
+	"fmt"
+	"time"
+)
 
 type Event struct {
 	Syscall string // Syscall name
@@ -15,11 +19,16 @@ type Event struct {
 func UnmarshallEntryEvent(marshd []byte) Event {
 
 	syscall_code := marshd[0]
-	pid := binary.LittleEndian.Uint32(marshd[1:5])
-	uid := binary.LittleEndian.Uint32(marshd[5:9])
-	comm := marshd[9:25]
-	filename := marshd[25:89]
-	timestamp := binary.LittleEndian.Uint64(marshd[89:97])
+	syscall_name := getSyscallFromCode(syscall_code)
+	pid := binary.LittleEndian.Uint32(marshd[4:8])
+	uid := binary.LittleEndian.Uint32(marshd[8:12])
+	comm := string(marshd[12:28])
+	filename := string(marshd[28:92])
+	timestamp := binary.BigEndian.Uint64(marshd[92:108])
+	ts := time.Unix(0, int64(timestamp))
+
+	fmt.Printf("Syscall: %s, PID: %d, UID: %d, COMM: %s, FILENAME: %s, TIME: %s\n", syscall_name,
+		pid, uid, comm, filename, ts.Format(time.RFC3339Nano))
 
 	return Event{}
 }
