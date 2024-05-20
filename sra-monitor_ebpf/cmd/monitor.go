@@ -22,7 +22,7 @@ const LEN_COMM int = 16
 //go:generate go run github.com/cilium/ebpf/cmd/bpf2go -target bpfel -cc clang monitor ../bpf/code.bpf.c -- -I/usr/include/linux/bpf.h
 
 type DataEnter struct {
-	PID       uint32
+	PID       int32
 	UID       uint32
 	Comm      [LEN_COMM]byte
 	Filename  [LEN_FILENAME]byte
@@ -30,7 +30,7 @@ type DataEnter struct {
 }
 
 type DataExit struct {
-	PID       uint32
+	PID       int32
 	UID       uint32
 	Comm      [LEN_COMM]byte
 	Timestamp uint64
