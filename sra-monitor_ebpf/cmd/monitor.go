@@ -9,6 +9,7 @@ import (
 	"os/user"
 	"time"
 
+	"github.com/cilium/ebpf"
 	"github.com/cilium/ebpf/link"
 	"github.com/cilium/ebpf/perf"
 	"golang.org/x/sys/unix"
@@ -56,33 +57,17 @@ func main() {
 	setLimit()
 	fmt.Println("Done!")
 
-	// Create monitor ebpf objects
-	objs := monitorObjects{}
-
-	// And load them into userspace (check for errors)
-	fmt.Println("\nLoading eBPF objects...")
-	if err := loadMonitorObjects(&objs, nil); err != nil {
-		log.Fatalf("Loading objects: %v", err)
-		os.Exit(-1)
-	}
+	// Create monitor ebpf objects and load them
+	objs := initializeBPFObjects()
 	defer objs.Close() // Need to be closed after
-	fmt.Println("Done!")
 
 	// Attach tracepoint to sys_enter_open
 	fmt.Println("\nAttaching tracepoints...")
-	tpEnterOpen, err := link.Tracepoint("syscalls", "sys_enter_openat", objs.monitorPrograms.TraceEnterOpen, nil)
-	if err != nil {
-		log.Fatalf("Attaching tracepoint sys_enter_open: %v", err)
-		os.Exit(-2)
-	}
+	tpEnterOpen := attachTracepoint("sys_enter_openat", objs.monitorPrograms.TraceEnterOpen)
 	defer tpEnterOpen.Close()
 
 	// Attach tracepoint to sys_exit_open
-	tpExitOpen, err := link.Tracepoint("syscalls", "sys_exit_openat", objs.monitorPrograms.TraceExitOpen, nil)
-	if err != nil {
-		log.Fatalf("Attaching tracepoint sys_exit_open: %v", err)
-		os.Exit(-3)
-	}
+	tpExitOpen := attachTracepoint("sys_exit_openat", objs.monitorPrograms.TraceExitOpen)
 	defer tpExitOpen.Close()
 	fmt.Println("Done!")
 
@@ -94,14 +79,8 @@ func main() {
 	*/
 
 	// Create a reader able to extract info from the map
-	fmt.Println("\nCreating reader...")
-	rd, err := perf.NewReader(objs.FileEventMap, os.Getpagesize())
-	if err != nil {
-		log.Fatalf("Opening ring buffer reader: %v", err)
-		os.Exit(-4)
-	}
+	rd := createRingBufferReader(objs)
 	defer rd.Close()
-	fmt.Println("Done!")
 
 	fmt.Println("\neBPF programs attached. Waiting for events...")
 	for {
@@ -144,4 +123,46 @@ func main() {
 			log.Printf("unknown event size: %d", buf.Len())
 		}
 	}
+}
+
+/*
+Initializes the bpf objects, loading them into userspace
+returns bpf objects
+*/
+func initializeBPFObjects() monitorObjects {
+	objs := monitorObjects{}
+	fmt.Println("\nLoading eBPF objects...")
+	if err := loadMonitorObjects(&objs, nil); err != nil {
+		log.Fatalf("Loading objects: %v", err)
+		os.Exit(-1)
+	}
+	fmt.Println("Done!")
+	return objs
+}
+
+/*
+Attaches a tracepoint given the name of the syscall and the
+ebpf program
+*/
+func attachTracepoint(syscall_name string, prog *ebpf.Program) link.Link {
+	tracepoint, err := link.Tracepoint("syscalls", syscall_name, prog, nil)
+	if err != nil {
+		log.Fatalf("Attaching tracepoint sys_enter_open: %v", err)
+		os.Exit(-2)
+	}
+	return tracepoint
+}
+
+/*
+Attempts to create a Reader to extract data from the ring buffer
+*/
+func createRingBufferReader(objs monitorObjects) *perf.Reader {
+	fmt.Println("\nCreating reader...")
+	rd, err := perf.NewReader(objs.FileEventMap, os.Getpagesize())
+	if err != nil {
+		log.Fatalf("Opening ring buffer reader: %v", err)
+		os.Exit(-4)
+	}
+	fmt.Println("Done!")
+	return rd
 }

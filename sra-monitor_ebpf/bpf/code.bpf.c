@@ -45,19 +45,19 @@ struct data_enter {
 
 // Stores exitting syscall data
 struct data_exit {
-    u32 pid;
+    int pid;
     u32 uid;
     char comm[LEN_COMM];
     u64 timestamp;
-    u32 ret_value;  // Return value
+    int ret_value;  // Return value
 };
 
 // Perf map to store events (data_enter/data_exit)
 struct {
     __uint(type, BPF_MAP_TYPE_PERF_EVENT_ARRAY);
-    __uint(key_size, sizeof(u32));
-    __uint(value_size, sizeof(u32));
     __uint(max_entries, MAX_ENTRIES);
+    __type(key, u32);
+    __type(value, int);
 } file_event_map SEC(".maps");
 
 struct {
