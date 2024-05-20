@@ -36,6 +36,7 @@ to use it:
 
 // Stores entering syscall data
 struct data_enter {
+    char syscall_name[1];
     u32 pid;
     u32 uid;
     char comm[LEN_COMM];
@@ -45,11 +46,12 @@ struct data_enter {
 
 // Stores exitting syscall data
 struct data_exit {
-    int pid;
+    char syscall_name[1];
+    u32 pid;
     u32 uid;
     char comm[LEN_COMM];
     u64 timestamp;
-    int ret_value;  // Return value
+    long ret_value;  // Return value
 };
 
 // Perf map to store events (data_enter/data_exit)
@@ -57,7 +59,7 @@ struct {
     __uint(type, BPF_MAP_TYPE_PERF_EVENT_ARRAY);
     __uint(max_entries, MAX_ENTRIES);
     __type(key, u32);
-    __type(value, int);
+    __type(value, u32);
 } file_event_map SEC(".maps");
 
 struct {
@@ -91,7 +93,8 @@ int trace_enter_open(struct entry_args_t *ctx) {
     u32 key = 0;
     int ret = 0;
 
-    //libbpf_set_strict_mode(LIBBPF_STRICT_ALL);
+    // Add a char to identify the syscall name on the userspace
+    dat.syscall_name[0] = 'o';
 
     // Extract PID, UID and timestamp
     dat.pid = GETPID(bpf_get_current_pid_tgid());
@@ -121,6 +124,9 @@ SEC("tracepoint/syscalls/sys_exit_openat")
 int trace_exit_open(struct exit_args_t *ctx){
     struct data_exit dat= {};
 
+    // Add a char to identify the syscall name on the userspace
+    dat.syscall_name[0] = 'o';
+
     // Extract PID, UID and timestamp
     dat.pid = GETPID(bpf_get_current_pid_tgid());
     dat.uid = bpf_get_current_uid_gid();
@@ -138,9 +144,14 @@ int trace_exit_open(struct exit_args_t *ctx){
     return 0;
 }
 /*
-SEC("tracepoints/syscalls/sys_enter_read")
-int trace_enter_read(struct pt_regs *ctx) {
-    struct data_enter dat = {};
+SEC("tracepoint/syscalls/sys_enter_read")
+int trace_enter_read(struct entry_args_t *ctx) {
+        struct data_enter dat = {};
+    u32 key = 0;
+    int ret = 0;
+
+    // Add a char to identify the syscall name on the userspace
+    dat.syscall_name = 'r';
 
     // Extract PID, UID and timestamp
     dat.pid = GETPID(bpf_get_current_pid_tgid());
@@ -151,17 +162,27 @@ int trace_enter_read(struct pt_regs *ctx) {
     bpf_get_current_comm(&dat.comm, sizeof(dat.comm));
 
     // Get the filename that was accessed
-    bpf_probe_read_user_str(&dat.filename, sizeof(dat.filename), (void *)PT_REGS_PARM1(ctx));
+    ret = bpf_probe_read_user_str(&dat.filename, sizeof(dat.filename), ctx->filename);
+    if (ret < 0) {
+        bpf_map_update_elem(&debug_map, &key, &ret, BPF_ANY);
+        return 0;
+    }
 
     // Output contents to perfmap
-    bpf_perf_event_output(ctx, &file_event_map, BPF_F_CURRENT_CPU, &dat, sizeof(dat));
+    ret = bpf_perf_event_output(ctx, &file_event_map, BPF_F_CURRENT_CPU, &dat, sizeof(dat));
+    if (ret < 0) {
+        bpf_map_update_elem(&debug_map, &key, &ret, BPF_ANY);
+    }
 
     return 0;
 }
 
 SEC("tracepoint/syscalls/sys_exit_read")
-int trace_exit_read(struct pt_regs *ctx){
+int trace_exit_read(struct exit_args_t *ctx){
     struct data_exit dat= {};
+
+    // Add a char to identify the syscall name on the userspace
+    dat.syscall_name = 'o';
 
     // Extract PID, UID and timestamp
     dat.pid = GETPID(bpf_get_current_pid_tgid());
@@ -172,7 +193,7 @@ int trace_exit_read(struct pt_regs *ctx){
     bpf_get_current_comm(&dat.comm, sizeof(dat.comm));
 
     // Extract the return value form *ctx
-    dat.ret_value = PT_REGS_RC(ctx);
+    dat.ret_value = ctx->ret;
 
     // Output contents to perfmap
     bpf_perf_event_output(ctx, &file_event_map, BPF_F_CURRENT_CPU, &dat, sizeof(dat));
@@ -181,9 +202,14 @@ int trace_exit_read(struct pt_regs *ctx){
 }
 
 
-SEC("tracepoints/syscalls/sys_enter_write")
-int tracepoint_enter_write(struct pt_regs *ctx) {
+SEC("tracepoint/syscalls/sys_enter_write")
+int tracepoint_enter_write(struct entry_args_t *ctx) {
     struct data_enter dat = {};
+    u32 key = 0;
+    int ret = 0;
+
+    // Add a char to identify the syscall name on the userspace
+    dat.syscall_name = 'w';
 
     // Extract PID, UID and timestamp
     dat.pid = GETPID(bpf_get_current_pid_tgid());
@@ -194,17 +220,27 @@ int tracepoint_enter_write(struct pt_regs *ctx) {
     bpf_get_current_comm(&dat.comm, sizeof(dat.comm));
 
     // Get the filename that was accessed
-    bpf_probe_read_user_str(&dat.filename, sizeof(dat.filename), (void *)PT_REGS_PARM1(ctx));
+    ret = bpf_probe_read_user_str(&dat.filename, sizeof(dat.filename), ctx->filename);
+    if (ret < 0) {
+        bpf_map_update_elem(&debug_map, &key, &ret, BPF_ANY);
+        return 0;
+    }
 
     // Output contents to perfmap
-    bpf_perf_event_output(ctx, &file_event_map, BPF_F_CURRENT_CPU, &dat, sizeof(dat));
+    ret = bpf_perf_event_output(ctx, &file_event_map, BPF_F_CURRENT_CPU, &dat, sizeof(dat));
+    if (ret < 0) {
+        bpf_map_update_elem(&debug_map, &key, &ret, BPF_ANY);
+    }
 
     return 0;
 }
 
 SEC("tracepoint/syscalls/sys_exit_write")
-int trace_exit_write(struct pt_regs *ctx){
+int trace_exit_write(struct exit_args_t *ctx){
     struct data_exit dat= {};
+
+    // Add a char to identify the syscall name on the userspace
+    dat.syscall_name = 'o';
 
     // Extract PID, UID and timestamp
     dat.pid = GETPID(bpf_get_current_pid_tgid());
@@ -215,7 +251,7 @@ int trace_exit_write(struct pt_regs *ctx){
     bpf_get_current_comm(&dat.comm, sizeof(dat.comm));
 
     // Extract the return value form *ctx
-    dat.ret_value = PT_REGS_RC(ctx);
+    dat.ret_value = ctx->ret;
 
     // Output contents to perfmap
     bpf_perf_event_output(ctx, &file_event_map, BPF_F_CURRENT_CPU, &dat, sizeof(dat));
