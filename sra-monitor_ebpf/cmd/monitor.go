@@ -15,41 +15,26 @@ import (
 	"golang.org/x/sys/unix"
 )
 
+// Constants defined
+const LEN_FILENAME int = 64
+const LEN_COMM int = 16
+
 //go:generate go run github.com/cilium/ebpf/cmd/bpf2go -target bpfel -cc clang monitor ../bpf/code.bpf.c -- -I/usr/include/linux/bpf.h
 
 type DataEnter struct {
 	PID       uint32
 	UID       uint32
-	Comm      [16]byte
-	Filename  [unix.NAME_MAX]byte
+	Comm      [LEN_COMM]byte
+	Filename  [LEN_FILENAME]byte
 	Timestamp uint64
 }
 
 type DataExit struct {
 	PID       uint32
 	UID       uint32
-	Comm      [16]byte
+	Comm      [LEN_COMM]byte
 	Timestamp uint64
 	Retval    int32
-}
-
-func setLimit() {
-	if err := unix.Setrlimit(unix.RLIMIT_MEMLOCK,
-		&unix.Rlimit{
-			Cur: unix.RLIM_INFINITY,
-			Max: unix.RLIM_INFINITY,
-		}); err != nil {
-		log.Fatalf("Failed to set memory limit")
-		os.Exit(-5)
-	}
-}
-
-func getUsernameFromUid(uid uint32) string {
-	u, err := user.LookupId(fmt.Sprint(uid))
-	if err != nil {
-		return "unknown"
-	}
-	return u.Username
 }
 
 func main() {
@@ -84,48 +69,6 @@ func main() {
 
 	fmt.Println("\neBPF programs attached. Waiting for events...")
 	readEvents(rd)
-}
-
-/*
-Initializes the bpf objects, loading them into userspace
-returns bpf objects
-*/
-func initializeBPFObjects() monitorObjects {
-	objs := monitorObjects{}
-	fmt.Println("\nLoading eBPF objects...")
-	if err := loadMonitorObjects(&objs, nil); err != nil {
-		log.Fatalf("Loading objects: %v", err)
-		os.Exit(-1)
-	}
-	fmt.Println("Done!")
-	return objs
-}
-
-/*
-Attaches a tracepoint given the name of the syscall and the
-ebpf program
-*/
-func attachTracepoint(syscall_name string, prog *ebpf.Program) link.Link {
-	tracepoint, err := link.Tracepoint("syscalls", syscall_name, prog, nil)
-	if err != nil {
-		log.Fatalf("Attaching tracepoint sys_enter_open: %v", err)
-		os.Exit(-2)
-	}
-	return tracepoint
-}
-
-/*
-Attempts to create a Reader to extract data from the ring buffer
-*/
-func createRingBufferReader(objs monitorObjects) *perf.Reader {
-	fmt.Println("\nCreating reader...")
-	rd, err := perf.NewReader(objs.FileEventMap, os.Getpagesize())
-	if err != nil {
-		log.Fatalf("Opening ring buffer reader: %v", err)
-		os.Exit(-4)
-	}
-	fmt.Println("Done!")
-	return rd
 }
 
 /*
@@ -188,4 +131,65 @@ func parseExitEvent(buf *bytes.Buffer, evtExit *DataExit) {
 
 	fmt.Printf("EXIT: Time: %s, PID: %d, UID: %d, User: %s, Comm: %s, Retval: %d\n",
 		timestamp.Format(time.RFC3339), evtExit.PID, evtExit.UID, username, string(evtExit.Comm[:]), evtExit.Retval)
+}
+
+/*
+Initializes the bpf objects, loading them into userspace
+returns bpf objects
+*/
+func initializeBPFObjects() monitorObjects {
+	objs := monitorObjects{}
+	fmt.Println("\nLoading eBPF objects...")
+	if err := loadMonitorObjects(&objs, nil); err != nil {
+		log.Fatalf("Loading objects: %v", err)
+		os.Exit(-1)
+	}
+	fmt.Println("Done!")
+	return objs
+}
+
+/*
+Attaches a tracepoint given the name of the syscall and the
+ebpf program
+*/
+func attachTracepoint(syscall_name string, prog *ebpf.Program) link.Link {
+	tracepoint, err := link.Tracepoint("syscalls", syscall_name, prog, nil)
+	if err != nil {
+		log.Fatalf("Attaching tracepoint sys_enter_open: %v", err)
+		os.Exit(-2)
+	}
+	return tracepoint
+}
+
+/*
+Attempts to create a Reader to extract data from the ring buffer
+*/
+func createRingBufferReader(objs monitorObjects) *perf.Reader {
+	fmt.Println("\nCreating reader...")
+	rd, err := perf.NewReader(objs.FileEventMap, os.Getpagesize())
+	if err != nil {
+		log.Fatalf("Opening ring buffer reader: %v", err)
+		os.Exit(-4)
+	}
+	fmt.Println("Done!")
+	return rd
+}
+
+func setLimit() {
+	if err := unix.Setrlimit(unix.RLIMIT_MEMLOCK,
+		&unix.Rlimit{
+			Cur: unix.RLIM_INFINITY,
+			Max: unix.RLIM_INFINITY,
+		}); err != nil {
+		log.Fatalf("Failed to set memory limit")
+		os.Exit(-5)
+	}
+}
+
+func getUsernameFromUid(uid uint32) string {
+	u, err := user.LookupId(fmt.Sprint(uid))
+	if err != nil {
+		return "unknown"
+	}
+	return u.Username
 }
