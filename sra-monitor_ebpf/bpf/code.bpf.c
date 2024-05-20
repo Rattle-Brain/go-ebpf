@@ -60,10 +60,17 @@ struct {
     __uint(max_entries, MAX_ENTRIES);
 } file_event_map SEC(".maps");
 
+struct {
+    __uint(type, BPF_MAP_TYPE_ARRAY);
+    __uint(max_entries, 1);
+    __type(key, u32);
+    __type(value, int);
+} debug_map SEC(".maps");
+
 // Entry arguments. 
 // Documentation in /sys/kernel/tracing/events/syscalls/sys_enter_open
 struct entry_args_t {
-    char _padding1[16];
+    char _padding1[24];
 
     const char* filename;
     int flags;
@@ -78,9 +85,11 @@ struct exit_args_t {
     long ret;
 };
 
-SEC("tracepoint/syscalls/sys_enter_open")
+SEC("tracepoint/syscalls/sys_enter_openat")
 int trace_enter_open(struct entry_args_t *ctx) {
     struct data_enter dat = {};
+    u32 key = 0;
+    int ret = 0;
 
     //libbpf_set_strict_mode(LIBBPF_STRICT_ALL);
 
@@ -93,15 +102,22 @@ int trace_enter_open(struct entry_args_t *ctx) {
     bpf_get_current_comm(&dat.comm, sizeof(dat.comm));
 
     // Get the filename that was accessed
-    bpf_probe_read_user_str(&dat.filename, sizeof(dat.filename), ctx->filename);
+    ret = bpf_probe_read_user_str(&dat.filename, sizeof(dat.filename), ctx->filename);
+    if (ret < 0) {
+        bpf_map_update_elem(&debug_map, &key, &ret, BPF_ANY);
+        return 0;
+    }
 
     // Output contents to perfmap
-    bpf_perf_event_output(ctx, &file_event_map, BPF_F_CURRENT_CPU, &dat, sizeof(dat));
+    ret = bpf_perf_event_output(ctx, &file_event_map, BPF_F_CURRENT_CPU, &dat, sizeof(dat));
+    if (ret < 0) {
+        bpf_map_update_elem(&debug_map, &key, &ret, BPF_ANY);
+    }
 
     return 0;
 }
 
-SEC("tracepoint/syscalls/sys_exit_open")
+SEC("tracepoint/syscalls/sys_exit_openat")
 int trace_exit_open(struct exit_args_t *ctx){
     struct data_exit dat= {};
 

@@ -14,7 +14,7 @@ import (
 	"golang.org/x/sys/unix"
 )
 
-//go:generate go run github.com/cilium/ebpf/cmd/bpf2go -target amd64 -cc clang monitor ../bpf/code.bpf.c -- -I/usr/include/linux/bpf.h
+//go:generate go run github.com/cilium/ebpf/cmd/bpf2go -target bpfel -cc clang monitor ../bpf/code.bpf.c -- -I/usr/include/linux/bpf.h
 
 type DataEnter struct {
 	PID       uint32
