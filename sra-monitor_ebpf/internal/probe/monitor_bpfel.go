@@ -53,8 +53,12 @@ type monitorSpecs struct {
 //
 // It can be passed ebpf.CollectionSpec.Assign.
 type monitorProgramSpecs struct {
-	TraceEnterOpen *ebpf.ProgramSpec `ebpf:"trace_enter_open"`
-	TraceExitOpen  *ebpf.ProgramSpec `ebpf:"trace_exit_open"`
+	TraceEnterOpen       *ebpf.ProgramSpec `ebpf:"trace_enter_open"`
+	TraceEnterRead       *ebpf.ProgramSpec `ebpf:"trace_enter_read"`
+	TraceExitOpen        *ebpf.ProgramSpec `ebpf:"trace_exit_open"`
+	TraceExitRead        *ebpf.ProgramSpec `ebpf:"trace_exit_read"`
+	TraceExitWrite       *ebpf.ProgramSpec `ebpf:"trace_exit_write"`
+	TracepointEnterWrite *ebpf.ProgramSpec `ebpf:"tracepoint_enter_write"`
 }
 
 // monitorMapSpecs contains maps before they are loaded into the kernel.
@@ -99,14 +103,22 @@ func (m *monitorMaps) Close() error {
 //
 // It can be passed to loadMonitorObjects or ebpf.CollectionSpec.LoadAndAssign.
 type monitorPrograms struct {
-	TraceEnterOpen *ebpf.Program `ebpf:"trace_enter_open"`
-	TraceExitOpen  *ebpf.Program `ebpf:"trace_exit_open"`
+	TraceEnterOpen       *ebpf.Program `ebpf:"trace_enter_open"`
+	TraceEnterRead       *ebpf.Program `ebpf:"trace_enter_read"`
+	TraceExitOpen        *ebpf.Program `ebpf:"trace_exit_open"`
+	TraceExitRead        *ebpf.Program `ebpf:"trace_exit_read"`
+	TraceExitWrite       *ebpf.Program `ebpf:"trace_exit_write"`
+	TracepointEnterWrite *ebpf.Program `ebpf:"tracepoint_enter_write"`
 }
 
 func (p *monitorPrograms) Close() error {
 	return _MonitorClose(
 		p.TraceEnterOpen,
+		p.TraceEnterRead,
 		p.TraceExitOpen,
+		p.TraceExitRead,
+		p.TraceExitWrite,
+		p.TracepointEnterWrite,
 	)
 }
 
