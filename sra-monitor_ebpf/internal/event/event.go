@@ -4,6 +4,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"os/user"
+	"strings"
 	"time"
 )
 
@@ -37,6 +38,9 @@ func UnmarshallEntryEvent(marshd []byte) Event {
 
 	// GEt Commname(LEN = 16) and Filename (LEN = 64)
 	comm := string(marshd[12:28])
+	if strings.Contains(comm, "monitor") {
+		return Event{}
+	}
 	filename := string(marshd[28:92])
 
 	// Timestamp (last bytes)
