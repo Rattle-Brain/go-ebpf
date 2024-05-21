@@ -36,7 +36,7 @@ to use it:
 
 // Stores entering syscall data
 struct data_enter {
-    char syscall_name[1];
+    char syscall_name;
     u32 pid;
     u32 uid;
     char comm[LEN_COMM];
@@ -46,12 +46,12 @@ struct data_enter {
 
 // Stores exitting syscall data
 struct data_exit {
-    char syscall_name[1];
+    char syscall_name;
     u32 pid;
     u32 uid;
     char comm[LEN_COMM];
     u64 timestamp;
-    long ret_value;  // Return value
+    s64 ret_value;  // Return value
 };
 
 // Perf map to store events (data_enter/data_exit)
@@ -84,7 +84,7 @@ struct entry_args_t {
 struct exit_args_t {
     char _padding1[16];
 
-    long ret;
+    s64 ret;
 };
 
 SEC("tracepoint/syscalls/sys_enter_openat")
@@ -94,7 +94,7 @@ int trace_enter_open(struct entry_args_t *ctx) {
     int ret = 0;
 
     // Add a char to identify the syscall name on the userspace
-    dat.syscall_name[0] = 'o';
+    dat.syscall_name = 'o';
 
     // Extract PID, UID and timestamp
     dat.pid = GETPID(bpf_get_current_pid_tgid());
@@ -125,7 +125,7 @@ int trace_exit_open(struct exit_args_t *ctx){
     struct data_exit dat= {};
 
     // Add a char to identify the syscall name on the userspace
-    dat.syscall_name[0] = 'o';
+    dat.syscall_name = 'o';
 
     // Extract PID, UID and timestamp
     dat.pid = GETPID(bpf_get_current_pid_tgid());

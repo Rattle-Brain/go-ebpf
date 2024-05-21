@@ -112,6 +112,7 @@ func readEvents(rd *perf.Reader) {
 			event.UnmarshallEntryEvent(record.RawSample)
 			//parseEnterEvent(buf, &evt)
 		} else if buf.Len() == 52 {
+			event.UnmarshallExitEvent(record.RawSample)
 			//parseExitEvent(buf, &evtExit)
 		} else {
 			log.Printf("unknown event size: %d", buf.Len())
