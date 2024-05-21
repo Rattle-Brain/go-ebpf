@@ -10,11 +10,13 @@ import (
 type Event struct {
 	Syscall string // Syscall name
 	//	Entering  bool   // Entering (0) or exiting (1)
-	PID       int32
+	PID       uint32
+	Commname  string
+	UID       uint32
 	Username  string
 	Filename  string
 	Retval    int32
-	Timestamp uint64
+	Timestamp string
 }
 
 func UnmarshallEntryEvent(marshd []byte) Event {
@@ -41,10 +43,21 @@ func UnmarshallEntryEvent(marshd []byte) Event {
 	timestamp := binary.BigEndian.Uint64(marshd[92:108])
 	ts := time.Unix(0, int64(timestamp))
 
+	// Create the event struct and fill it up
+	evt := Event{}
+	evt.Syscall = syscall_name
+	evt.PID = pid
+	evt.Commname = comm
+	evt.UID = uid
+	evt.Username = username
+	evt.Filename = filename
+	evt.Timestamp = ts.Format(time.RFC3339)
+
+	// Print for goo measure, will be removed
 	fmt.Printf("Syscall: %s, PID: %d, UID: %d, USER: %s, COMM: %s, FILENAME: %s, TIME: %s\n", syscall_name,
 		pid, uid, username, comm, filename, ts.Format(time.RFC3339Nano))
 
-	return Event{}
+	return evt
 }
 
 func UnmarshallExit(marshd []byte) Event {
