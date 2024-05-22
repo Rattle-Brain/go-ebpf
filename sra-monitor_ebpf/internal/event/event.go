@@ -49,7 +49,7 @@ func UnmarshallEntryEvent(marshd []byte) Event {
 	filename := string(marshd[28:92])
 
 	// Timestamp (last bytes)
-	timestamp := binary.BigEndian.Uint64(marshd[92:100])
+	timestamp := binary.LittleEndian.Uint64(marshd[96:104])
 
 	ts := time.Unix(0, int64(timestamp))
 
@@ -67,7 +67,7 @@ func UnmarshallEntryEvent(marshd []byte) Event {
 
 	// Print for goo measure, will be removed
 	fmt.Printf("ENTERING Syscall: %s, PID: %d, UID: %d, USER: %s, COMM: %s, FILENAME: %s, TIME: %s\n", syscall_name,
-		pid, uid, username, comm, filename, ts.Format(time.RFC3339Nano))
+		pid, uid, username, comm, filename, ts.Format(time.RFC1123))
 
 	return evt
 }
@@ -98,10 +98,10 @@ func UnmarshallExitEvent(marshd []byte) Event {
 	}
 
 	// Timestamp (last bytes)
-	timestamp := binary.BigEndian.Uint64(marshd[28:36])
+	timestamp := binary.LittleEndian.Uint64(marshd[32:40])
 	ts := time.Unix(0, int64(timestamp))
 
-	retval, _ := binary.Varint(marshd[36:44])
+	retval, _ := binary.Varint(marshd[40:48])
 
 	evt := Event{
 		Syscall:   syscall_name,
@@ -113,9 +113,10 @@ func UnmarshallExitEvent(marshd []byte) Event {
 		Retval:    retval,
 		Timestamp: timestamp,
 	}
+
 	// Print for goo measure, will be removed
 	fmt.Printf("EXITING Syscall: %s, PID: %d, UID: %d, USER: %s, COMM: %s, RETVAL: %d, TIME: %s\n", syscall_name,
-		pid, uid, username, comm, retval, ts.Format(time.RFC3339Nano))
+		pid, uid, username, comm, retval, ts.Format(time.RFC1123))
 
 	return evt
 }
@@ -139,4 +140,16 @@ func getUsernameFromUid(uid uint32) string {
 		return "unknown"
 	}
 	return u.Username
+}
+
+func PrintBytesHex(rawsample []byte) {
+
+	fmt.Print("[")
+	for i := 0; i < len(rawsample); i++ {
+		if i == len(rawsample) {
+			fmt.Printf("0x%x", rawsample[i])
+		}
+		fmt.Printf("0x%x, ", rawsample[i])
+	}
+	fmt.Print("]\n")
 }
