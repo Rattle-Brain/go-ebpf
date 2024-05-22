@@ -113,44 +113,6 @@ func readEvents(rd *perf.Reader) {
 	}
 }
 
-// /*
-// Takes the byte stream from an entry in the buffer and parses it
-// to fit the fields of the syscall_enter event
-// */
-// func parseEnterEvent(buf *bytes.Buffer, evt *DataEnter) {
-// 	err := binary.Read(buf, binary.LittleEndian, evt)
-// 	if err != nil {
-// 		log.Printf("parsing ring buffer event: %v", err)
-// 		return
-// 	}
-
-// 	syscall := getSyscallFromCode(evt.SyscallCode)
-// 	username := getUsernameFromUid(evt.UID)
-// 	timestamp := time.Unix(0, int64(evt.Timestamp))
-
-// 	fmt.Printf("ENTER: %s Time: %s, PID: %d, UID: %d, User: %s, Comm: %s, Filename: %s\n", syscall,
-// 		timestamp.Format(time.RFC3339), evt.PID, evt.UID, username, string(evt.Comm[:]), string(evt.Filename[:]))
-// }
-
-// /*
-// Takes the byte stream from an entry in the buffer and parses it
-// to fit the fields of the syscall_exit event
-// */
-// func parseExitEvent(buf *bytes.Buffer, evtExit *DataExit) {
-// 	err := binary.Read(buf, binary.LittleEndian, evtExit)
-// 	if err != nil {
-// 		log.Printf("parsing ring buffer event: %v", err)
-// 		return
-// 	}
-
-// 	syscall := getSyscallFromCode(evtExit.SyscallCode)
-// 	username := getUsernameFromUid(evtExit.UID)
-// 	timestamp := time.Unix(0, int64(evtExit.Timestamp))
-
-// 	fmt.Printf("EXIT: %s Time: %s, PID: %d, UID: %d, User: %s, Comm: %s, Retval: %d\n", syscall,
-// 		timestamp.Format(time.RFC3339), evtExit.PID, evtExit.UID, username, string(evtExit.Comm[:]), evtExit.Retval)
-// }
-
 /*
 Initializes the bpf objects, loading them into userspace
 returns bpf objects
@@ -203,24 +165,3 @@ func setLimit() {
 		os.Exit(-5)
 	}
 }
-
-// func getUsernameFromUid(uid uint32) string {
-// 	u, err := user.LookupId(fmt.Sprint(uid))
-// 	if err != nil {
-// 		return "unknown"
-// 	}
-// 	return u.Username
-// }
-
-// func getSyscallFromCode(b byte) string {
-// 	switch b {
-// 	case 'o':
-// 		return "Syscall_Openat"
-// 	case 'r':
-// 		return "Syscall_Read"
-// 	case 'w':
-// 		return "Syscall_Write"
-// 	default:
-// 		return "None"
-// 	}
-// }
