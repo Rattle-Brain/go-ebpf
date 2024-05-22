@@ -67,6 +67,7 @@ struct exit_args_t {
 SEC("tracepoint/syscalls/sys_enter_openat")
 int trace_enter_open(struct entry_args_t *ctx) {
     struct openat_event_data dat = {};
+    int err;
 
     // Add a char to identify the syscall name on the userspace
     dat.syscall = 'o';
@@ -80,13 +81,25 @@ int trace_enter_open(struct entry_args_t *ctx) {
     dat.ts_enter = bpf_ktime_get_ns();
 
     // Get the process that called the sys_open syscall
-    bpf_get_current_comm(&dat.comm, LEN_COMM);
+    err = bpf_get_current_comm(&dat.comm, LEN_COMM);
+    if(err < 0){
+        bpf_printk("Error getting exec name\n");
+        return err;
+    }
 
     // Get the filename that was accessed
-    bpf_probe_read_user_str(&dat.file, LEN_FILENAME, ctx->filename);
+    err = bpf_probe_read_user_str(&dat.file, LEN_FILENAME, ctx->filename);
+    if(err < 0){
+        bpf_printk("Error getting file name\n");
+        return err;
+    }
 
     // We save this information for later use (complete with retval)
-    bpf_map_update_elem(&temp_mem, &pid_tgid, &dat, BPF_ANY);
+    err = bpf_map_update_elem(&temp_mem, &pid_tgid, &dat, BPF_ANY);
+    if(err < 0){
+        bpf_printk("Error saving event to temp_mem\n");
+        return err;
+    }
 
     return 0;
 }

@@ -42,13 +42,17 @@ func UnmarshallOpenatEvent(marshd []byte) Event {
 	// Find the username
 	username := getUsernameFromUid(uid)
 
-	// GEt Commname(LEN = 16) and Filename (LEN = 64)
+	// Get Commname(LEN = 16) and Filename (LEN = 64)
 	comm := string(marshd[12:28])
 	if strings.Contains(comm, "monitor") {
 		// We don't want to trace this process
 		return Event{}
 	}
+
 	filename := string(marshd[28:92])
+	if strings.EqualFold(filename, "") {
+		return Event{}
+	}
 
 	// Timestamp (last bytes)
 	ts_enter := binary.LittleEndian.Uint64(marshd[96:104])
@@ -80,6 +84,7 @@ func UnmarshallOpenatEvent(marshd []byte) Event {
 	return evt
 }
 
+// Obtains a syscall name given a char as code
 func getSyscallFromCode(b byte) string {
 	switch b {
 	case 'o':
@@ -93,6 +98,7 @@ func getSyscallFromCode(b byte) string {
 	}
 }
 
+// Finds the User name given a UID
 func getUsernameFromUid(uid uint32) string {
 	u, err := user.LookupId(fmt.Sprint(uid))
 	if err != nil {
@@ -101,6 +107,7 @@ func getUsernameFromUid(uid uint32) string {
 	return u.Username
 }
 
+// DEBUG ONLY Prints a raw sample as hex and aborts the execution
 func PrintBytesHex(rawsample []byte) {
 
 	fmt.Print("[")
