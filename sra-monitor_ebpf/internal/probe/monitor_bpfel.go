@@ -12,6 +12,20 @@ import (
 	"github.com/cilium/ebpf"
 )
 
+type monitorOpenatEventData struct {
+	Syscall int8
+	_       [3]byte
+	Pid     uint32
+	Uid     uint32
+	Comm    [16]int8
+	File    [64]int8
+	_       [4]byte
+	TsEnter uint64
+	TsExit  uint64
+	Ret     int32
+	_       [4]byte
+}
+
 // loadMonitor returns the embedded CollectionSpec for monitor.
 func loadMonitor() (*ebpf.CollectionSpec, error) {
 	reader := bytes.NewReader(_MonitorBytes)
@@ -61,8 +75,8 @@ type monitorProgramSpecs struct {
 //
 // It can be passed ebpf.CollectionSpec.Assign.
 type monitorMapSpecs struct {
-	DebugMap     *ebpf.MapSpec `ebpf:"debug_map"`
 	FileEventMap *ebpf.MapSpec `ebpf:"file_event_map"`
+	TempMem      *ebpf.MapSpec `ebpf:"temp_mem"`
 }
 
 // monitorObjects contains all objects after they have been loaded into the kernel.
@@ -84,14 +98,14 @@ func (o *monitorObjects) Close() error {
 //
 // It can be passed to loadMonitorObjects or ebpf.CollectionSpec.LoadAndAssign.
 type monitorMaps struct {
-	DebugMap     *ebpf.Map `ebpf:"debug_map"`
 	FileEventMap *ebpf.Map `ebpf:"file_event_map"`
+	TempMem      *ebpf.Map `ebpf:"temp_mem"`
 }
 
 func (m *monitorMaps) Close() error {
 	return _MonitorClose(
-		m.DebugMap,
 		m.FileEventMap,
+		m.TempMem,
 	)
 }
 

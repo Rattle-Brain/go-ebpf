@@ -105,12 +105,8 @@ func readEvents(rd *perf.Reader) {
 		buf := bytes.NewBuffer(record.RawSample)
 
 		// Determine the type of event based on the size of the record
-		if buf.Len() == 108 {
-			event.UnmarshallEntryEvent(record.RawSample)
-			//parseEnterEvent(buf, &evt)
-		} else if buf.Len() == 52 {
-			event.UnmarshallExitEvent(record.RawSample)
-			//parseExitEvent(buf, &evtExit)
+		if buf.Len() == 124 {
+			event.UnmarshallOpenatEvent(record.RawSample)
 		} else {
 			log.Printf("unknown event size: %d", buf.Len())
 		}

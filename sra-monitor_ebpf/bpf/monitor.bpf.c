@@ -34,24 +34,35 @@ to use it:
 // Macro that allows to obtain the PID
 #define GETPID(x) x >> 32
 
-// Stores entering syscall data
-struct data_enter {
-    char syscall_name;
-    u32 pid;
-    u32 uid;
-    char comm[LEN_COMM];
-    char filename[LEN_FILENAME];
-    u64 timestamp;
-};
+// // Stores entering syscall data
+// struct data_enter {
+//     char syscall_name;
+//     u32 pid;
+//     u32 uid;
+//     char comm[LEN_COMM];
+//     char filename[LEN_FILENAME];
+//     u64 timestamp;
+// };
 
-// Stores exitting syscall data
-struct data_exit {
-    char syscall_name;
+// // Stores exitting syscall data
+// struct data_exit {
+//     char syscall_name;
+//     u32 pid;
+//     u32 uid;
+//     char comm[LEN_COMM];
+//     u64 timestamp;
+//     s64 ret_value;  // Return value
+// };
+
+struct openat_event_data {
+    char syscall;
     u32 pid;
     u32 uid;
     char comm[LEN_COMM];
-    u64 timestamp;
-    s64 ret_value;  // Return value
+    char file[LEN_FILENAME];
+    u64 ts_enter;
+    u64 ts_exit;
+    s32 ret;
 };
 
 // Perf map to store events (data_enter/data_exit)
@@ -63,11 +74,11 @@ struct {
 } file_event_map SEC(".maps");
 
 struct {
-    __uint(type, BPF_MAP_TYPE_ARRAY);
-    __uint(max_entries, 1);
-    __type(key, u32);
-    __type(value, int);
-} debug_map SEC(".maps");
+    __uint(type, BPF_MAP_TYPE_HASH);
+    __uint(max_entries, MAX_ENTRIES);
+    __type(key, u64);
+    __type(value, struct openat_event_data);
+} temp_mem SEC(".maps");
 
 // Entry arguments. 
 // Documentation in /sys/kernel/tracing/events/syscalls/sys_enter_open
@@ -89,58 +100,50 @@ struct exit_args_t {
 
 SEC("tracepoint/syscalls/sys_enter_openat")
 int trace_enter_open(struct entry_args_t *ctx) {
-    struct data_enter dat = {};
-    u32 key = 0;
-    int ret = 0;
+    struct openat_event_data dat = {};
 
     // Add a char to identify the syscall name on the userspace
-    dat.syscall_name = 'o';
+    dat.syscall = 'o';
 
-    // Extract PID, UID and timestamp
-    dat.pid = GETPID(bpf_get_current_pid_tgid());
+    // Extract PID and UID
+    u64 pid_tgid = bpf_get_current_pid_tgid(); // we need this as key
+    dat.pid = GETPID(pid_tgid);
     dat.uid = bpf_get_current_uid_gid();
-    dat.timestamp = bpf_ktime_get_ns();
+
+    // Get a "enter" timestamp
+    dat.ts_enter = bpf_ktime_get_ns();
 
     // Get the process that called the sys_open syscall
     bpf_get_current_comm(&dat.comm, sizeof(dat.comm));
 
     // Get the filename that was accessed
-    ret = bpf_probe_read_user_str(&dat.filename, sizeof(dat.filename), ctx->filename);
-    if (ret < 0) {
-        bpf_map_update_elem(&debug_map, &key, &ret, BPF_ANY);
-        return 0;
-    }
+    bpf_probe_read_user_str(&dat.file, sizeof(dat.file), ctx->filename);
 
-    // Output contents to perfmap
-    ret = bpf_perf_event_output(ctx, &file_event_map, BPF_F_CURRENT_CPU, &dat, sizeof(dat));
-    if (ret < 0) {
-        bpf_map_update_elem(&debug_map, &key, &ret, BPF_ANY);
-    }
+    bpf_map_update_elem(&temp_mem, &pid_tgid, &dat, BPF_ANY);
 
     return 0;
+
+    // Output contents to perfmap
+    // bpf_perf_event_output(ctx, &file_event_map, BPF_F_CURRENT_CPU, &dat, sizeof(dat));
 }
 
 SEC("tracepoint/syscalls/sys_exit_openat")
 int trace_exit_open(struct exit_args_t *ctx){
-    struct data_exit dat= {};
+    u64 pid_tgid = bpf_get_current_pid_tgid();
+    struct openat_event_data *dat = bpf_map_lookup_elem(&temp_mem, &pid_tgid);
 
-    // Add a char to identify the syscall name on the userspace
-    dat.syscall_name = 'o';
+    if(dat){
+        // Fill up the rest of fields
+        dat->ts_exit = bpf_ktime_get_ns();
+        dat->ret = ctx->ret;
 
-    // Extract PID, UID and timestamp
-    dat.pid = GETPID(bpf_get_current_pid_tgid());
-    dat.uid = bpf_get_current_uid_gid();
-    dat.timestamp = bpf_ktime_get_ns();
+        // Now let's output the struct to the map
+        bpf_perf_event_output(ctx, &file_event_map, BPF_F_CURRENT_CPU, dat, sizeof(*dat));
 
-    // Get the process that called the sys_open syscall
-    bpf_get_current_comm(&dat.comm, sizeof(dat.comm));
+        // And delete event from temp to avoid key colisions
+        bpf_map_delete_elem(&temp_mem, &pid_tgid);
+    }
 
-    // Extract the return value form *ctx
-    dat.ret_value = ctx->ret;
-
-    // Output contents to perfmap
-    bpf_perf_event_output(ctx, &file_event_map, BPF_F_CURRENT_CPU, &dat, sizeof(dat));
-    
     return 0;
 }
 /*

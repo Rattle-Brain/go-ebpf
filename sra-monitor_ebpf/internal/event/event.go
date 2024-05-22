@@ -3,28 +3,30 @@ package event
 import (
 	"encoding/binary"
 	"fmt"
+	"os"
 	"os/user"
 	"strings"
 	"time"
 )
 
+const TO_MILI_FROM_NANO = 1000
+
 type Event struct {
 	Syscall string // Syscall name
-	//	Entering  bool   // Entering (0) or exiting (1)
-	PID       uint32
-	Commname  string
-	UID       uint32
-	Username  string
-	Filename  string
-	Retval    int64
-	Timestamp uint64
+	PID     uint32
+	Comm    string
+	UID     uint32
+	User    string
+	File    string
+	Retval  int64
+	Latency uint64
+	Date    string
 }
 
 /*
-Extracts information from byte array and transforms it into an event
-Works for the entry event
+Parses a byte array transforming it into an Openat Syscall Event
 */
-func UnmarshallEntryEvent(marshd []byte) Event {
+func UnmarshallOpenatEvent(marshd []byte) Event {
 	//First we need to parse the events. Since most of the time the
 	// Automatic process wil not do it properly with the offsets
 	// We need to do it manually like so.
@@ -49,74 +51,31 @@ func UnmarshallEntryEvent(marshd []byte) Event {
 	filename := string(marshd[28:92])
 
 	// Timestamp (last bytes)
-	timestamp := binary.LittleEndian.Uint64(marshd[96:104])
+	ts_enter := binary.LittleEndian.Uint64(marshd[96:104])
+	ts_exit := binary.LittleEndian.Uint64(marshd[104:112])
 
-	ts := time.Unix(0, int64(timestamp))
+	time_spent_ms := (float64(ts_exit) - float64(ts_enter)) / TO_MILI_FROM_NANO
+
+	ts := time.Now()
+
+	retval, _ := binary.Varint(marshd[112:116])
 
 	// Create the event struct and fill it up
 	evt := Event{
-		Syscall:   syscall_name,
-		PID:       pid,
-		Commname:  comm,
-		UID:       uid,
-		Username:  username,
-		Filename:  filename,
-		Retval:    -200,
-		Timestamp: timestamp,
+		Syscall: syscall_name,
+		PID:     pid,
+		Comm:    comm,
+		UID:     uid,
+		User:    username,
+		File:    filename,
+		Retval:  retval,
+		Latency: uint64(time_spent_ms),
+		Date:    ts.Format(time.RFC1123),
 	}
 
 	// Print for goo measure, will be removed
-	fmt.Printf("ENTERING Syscall: %s, PID: %d, UID: %d, USER: %s, COMM: %s, FILENAME: %s, TIME: %s\n", syscall_name,
-		pid, uid, username, comm, filename, ts.Format(time.RFC1123))
-
-	return evt
-}
-
-/*
-Extracts information from byte array and transforms it into an event
-Works for the exit event
-*/
-func UnmarshallExitEvent(marshd []byte) Event {
-	// Same gimmick here
-
-	// Initial byte for opcode to string
-	syscall_code := marshd[0]
-	syscall_name := getSyscallFromCode(syscall_code)
-
-	// Get PID and UID
-	pid := binary.LittleEndian.Uint32(marshd[4:8])
-	uid := binary.LittleEndian.Uint32(marshd[8:12])
-
-	// Find the username
-	username := getUsernameFromUid(uid)
-
-	// GEt Commname(LEN = 16) and Filename (LEN = 64)
-	comm := string(marshd[12:28])
-	if strings.Contains(comm, "monitor") {
-		// We don't want to trace this process
-		return Event{}
-	}
-
-	// Timestamp (last bytes)
-	timestamp := binary.LittleEndian.Uint64(marshd[32:40])
-	ts := time.Unix(0, int64(timestamp))
-
-	retval, _ := binary.Varint(marshd[40:48])
-
-	evt := Event{
-		Syscall:   syscall_name,
-		PID:       pid,
-		Commname:  comm,
-		UID:       uid,
-		Username:  username,
-		Filename:  "",
-		Retval:    retval,
-		Timestamp: timestamp,
-	}
-
-	// Print for goo measure, will be removed
-	fmt.Printf("EXITING Syscall: %s, PID: %d, UID: %d, USER: %s, COMM: %s, RETVAL: %d, TIME: %s\n", syscall_name,
-		pid, uid, username, comm, retval, ts.Format(time.RFC1123))
+	fmt.Printf("%s %s executed %s (PID: %d) in %d ms on file %s. Returned: %d\n", evt.Date,
+		evt.User, evt.Comm, evt.PID, evt.Latency, evt.File, evt.Retval)
 
 	return evt
 }
@@ -152,4 +111,5 @@ func PrintBytesHex(rawsample []byte) {
 		fmt.Printf("0x%x, ", rawsample[i])
 	}
 	fmt.Print("]\n")
+	os.Exit(1)
 }
