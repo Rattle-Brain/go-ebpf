@@ -18,7 +18,7 @@ type openatOpenatEventData struct {
 	Pid     uint32
 	Uid     uint32
 	Comm    [16]int8
-	File    [64]int8
+	File    [128]int8
 	_       [4]byte
 	TsEnter uint64
 	TsExit  uint64

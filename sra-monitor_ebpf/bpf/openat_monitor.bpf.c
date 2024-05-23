@@ -17,7 +17,7 @@ https://docs.kernel.org/bpf/libbpf/libbpf_overview.html
 #include <bpf/bpf_tracing.h>
 #include <bpf/bpf_core_read.h>
 
-#define LEN_FILENAME 64
+#define LEN_FILENAME 128
 #define LEN_COMM 16
 
 #define MAX_ENTRIES 1024

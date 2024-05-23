@@ -18,7 +18,7 @@ type Event struct {
 	UID     uint32
 	User    string
 	File    string
-	Retval  int64
+	Retval  int32
 	Latency uint64
 	Date    string
 }
@@ -49,20 +49,20 @@ func UnmarshallOpenatEvent(marshd []byte) Event {
 		return Event{}
 	}
 
-	filename := string(marshd[28:92])
+	filename := string(marshd[28:156])
 	if strings.EqualFold(filename, "") {
 		return Event{}
 	}
 
 	// Timestamp (last bytes)
-	ts_enter := binary.LittleEndian.Uint64(marshd[96:104])
-	ts_exit := binary.LittleEndian.Uint64(marshd[104:112])
+	ts_enter := binary.LittleEndian.Uint64(marshd[160:168])
+	ts_exit := binary.LittleEndian.Uint64(marshd[168:176])
 
 	time_spent_ms := (float64(ts_exit) - float64(ts_enter)) / TO_MILI_FROM_NANO
 
 	ts := time.Now()
 
-	retval, _ := binary.Varint(marshd[112:116])
+	retval := int32(binary.LittleEndian.Uint32(marshd[176:180]))
 
 	// Create the event struct and fill it up
 	evt := Event{
@@ -112,6 +112,9 @@ func PrintBytesHex(rawsample []byte) {
 
 	fmt.Print("[")
 	for i := 0; i < len(rawsample); i++ {
+		if i%4 == 0 {
+			fmt.Println()
+		}
 		if i == len(rawsample) {
 			fmt.Printf("0x%x", rawsample[i])
 		}
