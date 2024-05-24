@@ -3,10 +3,10 @@ package event
 import (
 	"encoding/binary"
 	"fmt"
-	"os"
-	"os/user"
 	"strings"
 	"time"
+
+	"example.com/sra-monitor/utils"
 )
 
 const NS_TO_MS = 1000
@@ -33,14 +33,14 @@ func UnmarshallOpenatEvent(marshd []byte) Event {
 
 	// Initial byte for opcode to string
 	syscall_code := marshd[0]
-	syscall_name := getSyscallFromCode(syscall_code)
+	syscall_name := utils.GetSyscallFromCode(syscall_code)
 
 	// Get PID and UID
 	pid := binary.LittleEndian.Uint32(marshd[4:8])
 	uid := binary.LittleEndian.Uint32(marshd[8:12])
 
 	// Find the username
-	username := getUsernameFromUid(uid)
+	username := utils.GetUsernameFromUid(uid)
 
 	// Get Commname(LEN = 16) and Filename (LEN = 64)
 	comm := string(marshd[12:28])
@@ -82,44 +82,4 @@ func UnmarshallOpenatEvent(marshd []byte) Event {
 		evt.User, evt.Comm, evt.PID, evt.Latency, evt.File, evt.Retval)
 
 	return evt
-}
-
-// Obtains a syscall name given a char as code
-func getSyscallFromCode(b byte) string {
-	switch b {
-	case 'o':
-		return "Syscall Openat"
-	case 'r':
-		return "Syscall Read"
-	case 'w':
-		return "Syscall Write"
-	default:
-		return "None"
-	}
-}
-
-// Finds the User name given a UID
-func getUsernameFromUid(uid uint32) string {
-	u, err := user.LookupId(fmt.Sprint(uid))
-	if err != nil {
-		return "unknown"
-	}
-	return u.Username
-}
-
-// DEBUG ONLY Prints a raw sample as hex and aborts the execution
-func PrintBytesHex(rawsample []byte) {
-
-	fmt.Print("[")
-	for i := 0; i < len(rawsample); i++ {
-		if i%4 == 0 {
-			fmt.Println()
-		}
-		if i == len(rawsample) {
-			fmt.Printf("0x%x", rawsample[i])
-		}
-		fmt.Printf("0x%x, ", rawsample[i])
-	}
-	fmt.Print("]\n")
-	os.Exit(1)
 }

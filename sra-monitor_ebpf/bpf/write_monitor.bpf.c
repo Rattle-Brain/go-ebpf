@@ -72,8 +72,6 @@ struct exit_args_t {
     s64 ret;
 };
 
-
-
 SEC("tracepoint/syscalls/sys_enter_write")
 int tracepoint_enter_write(struct entry_args_t *ctx) {
     struct write_event_data dat = {};

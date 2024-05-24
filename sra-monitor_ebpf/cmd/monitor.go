@@ -1,10 +1,10 @@
 package main
 
 import (
-	"example.com/sra-monitor/internal/probe"
+	probe_openat "example.com/sra-monitor/internal/probe/sys_openat"
 )
 
 func main() {
 
-	probe.Run()
+	probe_openat.Run()
 }
