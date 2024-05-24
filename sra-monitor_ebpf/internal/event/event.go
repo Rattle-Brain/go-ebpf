@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-const TO_MILI_FROM_NANO = 1000
+const NS_TO_MS = 1000
 
 type Event struct {
 	Syscall string // Syscall name
@@ -58,7 +58,7 @@ func UnmarshallOpenatEvent(marshd []byte) Event {
 	ts_enter := binary.LittleEndian.Uint64(marshd[160:168])
 	ts_exit := binary.LittleEndian.Uint64(marshd[168:176])
 
-	time_spent_ms := (float64(ts_exit) - float64(ts_enter)) / TO_MILI_FROM_NANO
+	time_spent_ms := (float64(ts_exit) - float64(ts_enter)) / NS_TO_MS
 
 	ts := time.Now()
 
@@ -92,7 +92,7 @@ func getSyscallFromCode(b byte) string {
 	case 'r':
 		return "Syscall Read"
 	case 'w':
-		return "Syscall sWrite"
+		return "Syscall Write"
 	default:
 		return "None"
 	}

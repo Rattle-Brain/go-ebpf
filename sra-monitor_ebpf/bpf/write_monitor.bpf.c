@@ -17,7 +17,8 @@ https://docs.kernel.org/bpf/libbpf/libbpf_overview.html
 #include <bpf/bpf_tracing.h>
 #include <bpf/bpf_core_read.h>
 
-#define LEN_FILENAME 64
+
+#define LEN_FILENAME 128
 #define LEN_COMM 16
 
 #define MAX_ENTRIES 1024
@@ -31,7 +32,7 @@ struct write_event_data {
     u32 pid;
     u32 uid;
     char comm[LEN_COMM];
-    char file[LEN_FILENAME];
+    u64 fd;
     u64 ts_enter;
     u64 ts_exit;
     s32 ret;
@@ -50,17 +51,17 @@ struct {
     __uint(type, BPF_MAP_TYPE_HASH);
     __uint(max_entries, MAX_ENTRIES);
     __type(key, u64);
-    __type(value, struct openat_event_data);
+    __type(value, struct write_event_data);
 } temp_mem SEC(".maps");
 
 // Entry arguments. 
 // Documentation in /sys/kernel/tracing/events/syscalls/sys_enter_write
 struct entry_args_t {
-    char _padding1[24];
+    char _padding1[16];
 
-    const char* filename;
-    int flags;
-    umode_t mode;
+    unsigned int fd;
+    const char * buf;
+    size_t count;
 };
 
 // Exit arguments. 
@@ -76,49 +77,62 @@ struct exit_args_t {
 SEC("tracepoint/syscalls/sys_enter_write")
 int tracepoint_enter_write(struct entry_args_t *ctx) {
     struct write_event_data dat = {};
-    u32 key = 0;
-    int ret = 0;
+    int err;
 
     // Add a char to identify the syscall name on the userspace
     dat.syscall = 'w';
 
-    // Extract PID, UID and timestamp
-    dat.pid = GETPID(bpf_get_current_pid_tgid());
+    // Extract PID and UID
+    u64 pid_tgid = bpf_get_current_pid_tgid(); // we need this as key
+    dat.pid = GETPID(pid_tgid);
     dat.uid = bpf_get_current_uid_gid();
+
+    // Get a "enter" timestamp
     dat.ts_enter = bpf_ktime_get_ns();
 
     // Get the process that called the sys_open syscall
-    bpf_get_current_comm(&dat.comm, sizeof(dat.comm));
+    err = bpf_get_current_comm(&dat.comm, LEN_COMM);
+    if(err < 0){
+        bpf_printk("Error getting exec name\n");
+        return err;
+    }
 
-    // Get the filename that was accessed
-    ret = bpf_probe_read_user_str(&dat.file, sizeof(dat.file), ctx->filename);
+    /* 
+    This time, instead of the filename, we save the file descriptor
+    Why? Because sys_enter_write does not store the filename, stores the fd
+    and I'm NOT recompiling the kernel to add the bpf_fd2path helper function
+    when I can fetch the filename from the fd in the userspace.
 
-    // Output contents to perfmap
-    ret = bpf_perf_event_output(ctx, &file_event_map, BPF_F_CURRENT_CPU, &dat, sizeof(dat));
+    There's a chance I do this for all tracepoints for many reasons I'm not explaining here
+    */
+    dat.fd = ctx->fd;
+
+    // We save this information for later use (complete with retval)
+    err = bpf_map_update_elem(&temp_mem, &pid_tgid, &dat, BPF_ANY);
+    if(err < 0){
+        bpf_printk("Error saving event to temp_mem\n");
+        return err;
+    }
 
     return 0;
 }
 
 SEC("tracepoint/syscalls/sys_exit_write")
 int trace_exit_write(struct exit_args_t *ctx){
-    struct write_event_data dat= {};
+    u64 pid_tgid = bpf_get_current_pid_tgid();
+    struct write_event_data *dat = bpf_map_lookup_elem(&temp_mem, &pid_tgid);
 
-    // Add a char to identify the syscall name on the userspace
-    dat.syscall = 'o';
+    if(dat){
+        // Fill up the rest of fields
+        dat->ts_exit = bpf_ktime_get_ns();  // So we know the time it took to complete the syscall
+        dat->ret = ctx->ret;
 
-    // Extract PID, UID and timestamp
-    dat.pid = GETPID(bpf_get_current_pid_tgid());
-    dat.uid = bpf_get_current_uid_gid();
-    dat.ts_exit = bpf_ktime_get_ns();
+        // Now let's output the struct to the map
+        bpf_perf_event_output(ctx, &file_event_map, BPF_F_CURRENT_CPU, dat, sizeof(*dat));
 
-    // Get the process that called the sys_open syscall
-    bpf_get_current_comm(&dat.comm, sizeof(dat.comm));
+        // And delete event from temp to avoid key colisions
+        bpf_map_delete_elem(&temp_mem, &pid_tgid);
+    }
 
-    // Extract the return value form *ctx
-    dat.ret = ctx->ret;
-
-    // Output contents to perfmap
-    bpf_perf_event_output(ctx, &file_event_map, BPF_F_CURRENT_CPU, &dat, sizeof(dat));
-    
     return 0;
 }
