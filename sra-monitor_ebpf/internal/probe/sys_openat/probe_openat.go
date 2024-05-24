@@ -10,10 +10,6 @@ import (
 	"github.com/cilium/ebpf/perf"
 )
 
-// Constants defined
-const LEN_FILENAME int = 64
-const LEN_COMM int = 16
-
 //go:generate go run github.com/cilium/ebpf/cmd/bpf2go -target bpfel -cc clang openat ../../../bpf/openat_monitor.bpf.c -- -I/usr/include/linux/bpf.h
 
 func Run() {
