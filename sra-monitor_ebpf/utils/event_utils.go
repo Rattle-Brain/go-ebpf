@@ -21,7 +21,7 @@ func GetFilePath(pid uint32, fd uint64) string {
 	path := fmt.Sprintf("/proc/%d/fd/%d", pid, fd)
 	target, err := os.Readlink(path)
 	if err != nil {
-		return fmt.Sprintf("FD %d", fd)
+		return ":["
 	}
 	return target
 }
