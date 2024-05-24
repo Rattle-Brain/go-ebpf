@@ -134,3 +134,5 @@ int trace_exit_write(struct exit_args_t *ctx){
 
     return 0;
 }
+
+char _license[] SEC("license") = "GPL";

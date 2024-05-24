@@ -1,7 +1,7 @@
 package main
 
 import (
-	probe_openat "example.com/sra-monitor/internal/probe/sys_openat"
+	probe_openat "example.com/sra-monitor/internal/probe/sys_write"
 )
 
 func main() {

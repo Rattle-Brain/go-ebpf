@@ -17,7 +17,7 @@ func GetUsernameFromUid(uid uint32) string {
 }
 
 // Finds the name of a file from a pid and a fd
-func GetFilePath(pid uint32, fd int32) string {
+func GetFilePath(pid uint32, fd uint64) string {
 	path := fmt.Sprintf("/proc/%d/fd/%d", pid, fd)
 	target, err := os.Readlink(path)
 	if err != nil {
