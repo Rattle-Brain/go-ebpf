@@ -12,7 +12,7 @@ import (
 
 //go:generate go run github.com/cilium/ebpf/cmd/bpf2go -target bpfel -cc clang write ../../../bpf/write_monitor.bpf.c -- -I/usr/include/linux/bpf.h
 
-func Run() {
+func Run(evts chan event.Event) {
 	fmt.Println("Setting memory limit...")
 	utils.SetMemLimit()
 	fmt.Println("Done!")
@@ -36,13 +36,13 @@ func Run() {
 	defer rd.Close()
 
 	fmt.Println("\neBPF programs attached. Waiting for events...")
-	readEvents(rd)
+	readEvents(rd, evts)
 }
 
 /*
 Loops indefinetly to read events from the bpf map as they happen.
 */
-func readEvents(rd *perf.Reader) {
+func readEvents(rd *perf.Reader, evts chan event.Event) {
 	for {
 		record, err := rd.Read()
 		if err != nil {
@@ -54,7 +54,10 @@ func readEvents(rd *perf.Reader) {
 
 		// Determine the type of event based on the size of the record
 		if record_len == 68 {
-			event.UnmarshallWriteEvent(record.RawSample)
+			evt := event.UnmarshallWriteEvent(record.RawSample)
+			if evt != (event.Event{}) {
+				evts <- event.UnmarshallWriteEvent(record.RawSample)
+			}
 		} else {
 			log.Printf("unknown event size: %d", record_len)
 		}

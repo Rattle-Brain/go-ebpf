@@ -2,7 +2,6 @@ package event
 
 import (
 	"encoding/binary"
-	"fmt"
 	"strings"
 	"time"
 
@@ -77,10 +76,6 @@ func UnmarshallOpenatEvent(marshd []byte) Event {
 		Date:    ts.Format(time.RFC1123),
 	}
 
-	// Print for goo measure, will be removed
-	fmt.Printf("%s %s executed %s (PID: %d) in %d ms on file %s. Returned: %d\n", evt.Date,
-		evt.User, evt.Comm, evt.PID, evt.Latency, evt.File, evt.Retval)
-
 	return evt
 }
 
@@ -136,10 +131,6 @@ func UnmarshallWriteEvent(marshd []byte) Event {
 		Latency: uint64(time_spent_ms),
 		Date:    ts.Format(time.RFC1123),
 	}
-
-	// Print for goo measure, will be removed
-	fmt.Printf("%s %s run %s (PID: %d) executed %s in %d ms on file %s. Returned: %d\n", evt.Date,
-		evt.User, evt.Comm, evt.PID, evt.Syscall, evt.Latency, evt.File, evt.Retval)
 
 	//utils.PrintBytesHex(marshd)
 	return evt
