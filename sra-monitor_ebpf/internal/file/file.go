@@ -29,14 +29,33 @@ func CreateFile(name string) error {
 }
 
 /*
-Opens an existing file, or returns error if it can't
+Opens an existing file to write on, or returns error if it can't
 */
-func OpenFile(name string) (*os.File, error) {
+func OpenFileWrite(name string) (*os.File, error) {
 	file, err := os.OpenFile(name, os.O_WRONLY|os.O_APPEND, 0644)
 	if err != nil {
 		return nil, err
 	}
 	return file, nil
+}
+
+/*
+Opens an existing file to read from, or returns error if it can't
+*/
+func OpenFileRead(name string) (*os.File, error) {
+	file, err := os.OpenFile(name, os.O_RDONLY, 0644)
+	if err != nil {
+		return nil, err
+	}
+	return file, nil
+}
+
+/*
+Obtains a list of sensitive files to observe
+*/
+func RetrieveSensitiveFilesList(name string) []string {
+
+	return []string{"", ""}
 }
 
 /*
@@ -65,5 +84,20 @@ func AppendToFile(file *os.File, evt event.Event) error {
 		return err
 	}
 
+	return nil
+}
+
+/*
+Closes a file after every byte has ben flushed out of the buffer of
+the writer.
+*/
+func CloseFile(file *os.File) error {
+	if err := file.Sync(); err != nil {
+		return err
+	}
+	err := file.Close()
+	if err != nil {
+		return err
+	}
 	return nil
 }
