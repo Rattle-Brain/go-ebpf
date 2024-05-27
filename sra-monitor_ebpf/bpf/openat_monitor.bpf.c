@@ -130,10 +130,6 @@ int trace_exit_open(struct exit_args_t *ctx){
 
     return 0;
 }
-/*
-
-}
-*/
 
 /*
 Cool original idea but ingored for the moment.
