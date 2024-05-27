@@ -22,10 +22,21 @@ type Event struct {
 	Date    string
 }
 
+// Interface. Selects what event to unmarshall based on 1st char
+func UnmarshallEvent(marshd []byte) Event {
+	if len(marshd) == 188 && marshd[0] == 'o' {
+		return unmarshallOpenatEvent(marshd)
+	} else if len(marshd) == 68 && marshd[0] == 'w' {
+		return unmarshallWriteEvent(marshd)
+	} else {
+		return Event{}
+	}
+}
+
 /*
 Parses a byte array transforming it into an Openat Syscall Event
 */
-func UnmarshallOpenatEvent(marshd []byte) Event {
+func unmarshallOpenatEvent(marshd []byte) Event {
 	//First we need to parse the events. Since most of the time the
 	// Automatic process wil not do it properly with the offsets
 	// We need to do it manually like so.
@@ -79,7 +90,7 @@ func UnmarshallOpenatEvent(marshd []byte) Event {
 	return evt
 }
 
-func UnmarshallWriteEvent(marshd []byte) Event {
+func unmarshallWriteEvent(marshd []byte) Event {
 	//First we need to parse the events. Since most of the time the
 	// Automatic process wil not do it properly with the offsets
 	// We need to do it manually like so.

@@ -50,16 +50,10 @@ func readEvents(rd *perf.Reader, evts chan event.Event) {
 			continue
 		}
 
-		record_len := len(record.RawSample)
-
 		// Determine the type of event based on the size of the record
-		if record_len == 68 {
-			evt := event.UnmarshallWriteEvent(record.RawSample)
-			if evt != (event.Event{}) {
-				evts <- event.UnmarshallWriteEvent(record.RawSample)
-			}
-		} else {
-			log.Printf("unknown event size: %d", record_len)
+		evt := event.UnmarshallEvent(record.RawSample)
+		if evt != (event.Event{}) {
+			evts <- event.UnmarshallEvent(record.RawSample)
 		}
 	}
 }
