@@ -23,6 +23,7 @@ type Event struct {
 }
 
 // Interface. Selects what event to unmarshall based on 1st char
+// and returns an event filled or empty
 func UnmarshallEvent(marshd []byte) Event {
 	if len(marshd) == 188 && marshd[0] == 'o' {
 		return unmarshallOpenatEvent(marshd)
