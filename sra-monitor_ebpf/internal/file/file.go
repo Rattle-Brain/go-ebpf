@@ -1,9 +1,11 @@
 package file
 
 import (
+	"bufio"
 	"encoding/csv"
 	"fmt"
 	"os"
+	"strings"
 
 	"example.com/sra-monitor/internal/event"
 )
@@ -51,11 +53,40 @@ func OpenFileRead(name string) (*os.File, error) {
 }
 
 /*
-Obtains a list of sensitive files to observe
+Obtains a list of sensitive files to observe. Returns a slice with the files or
+an empty slice if something failed while opening and processing the file
 */
 func RetrieveSensitiveFilesList(name string) []string {
 
-	return []string{"", ""}
+	file, err := OpenFileRead(name)
+	if err != nil {
+		fmt.Printf("File %s could not be opened. Permissions?", name)
+		return ([]string{})
+	}
+	defer file.Close()
+
+	var sensitive_files []string
+	scn := bufio.NewScanner(file)
+	for scn.Scan() {
+		line := strings.TrimSpace(scn.Text())
+		// Ignore comments and empty lines
+		if line[0] == '#' || len(line) == 0 {
+			continue
+		}
+		// Ignore invalid lines and print debug message
+		if line[0] != '/' {
+			fmt.Printf("DEBUG: Ignored line '%s' as it does not start with '/' (root directory)\n", line)
+			continue
+		}
+		sensitive_files = append(sensitive_files, line)
+	}
+
+	if err := scn.Err(); err != nil {
+		return ([]string{})
+	}
+
+	return sensitive_files
+
 }
 
 /*
