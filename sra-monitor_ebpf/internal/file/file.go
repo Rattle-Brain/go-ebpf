@@ -11,6 +11,7 @@ import (
 )
 
 const SFILES_TXT string = "LINUX-SENSITIVE-FILES.txt" // Modify this if you want another file
+const OUTPUT_LOG string = "monitor.log"
 
 /*
 Creates a new file, and adds a header to knwo what each field is
@@ -109,7 +110,7 @@ func AppendToFile(file *os.File, evt event.Event) error {
 	syscall := evt.Syscall
 	latency := fmt.Sprintf("%d", evt.Latency)
 	fname := evt.File
-	retval := string(evt.Retval)
+	retval := fmt.Sprintf("%d", evt.Retval)
 
 	data := []string{date, user, comm, pid, syscall, latency, fname, retval}
 
