@@ -1,3 +1,8 @@
+# Add files to be observed by the monitor here.
+# Lines starting with '#' are comments and not parsed
+# Files must be written with a full path always starting from root (/)
+
+
 /etc/shadow
 /etc/passwd
 /etc/gshadow

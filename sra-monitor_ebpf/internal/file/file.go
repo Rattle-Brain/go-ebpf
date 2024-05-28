@@ -10,7 +10,7 @@ import (
 	"example.com/sra-monitor/internal/event"
 )
 
-const SFILES_TXT string = "LINUX-SENSITIVE-FILES.txt"
+const SFILES_TXT string = "LINUX-SENSITIVE-FILES.txt" // Modify this if you want another file
 
 /*
 Creates a new file, and adds a header to knwo what each field is
@@ -73,7 +73,7 @@ func RetrieveSensitiveFilesList(name string) []string {
 	for scn.Scan() {
 		line := strings.TrimSpace(scn.Text())
 		// Ignore comments and empty lines
-		if line[0] == '#' || len(line) == 0 {
+		if len(line) == 0 || line[0] == '#' {
 			continue
 		}
 		// Ignore invalid lines and print debug message
