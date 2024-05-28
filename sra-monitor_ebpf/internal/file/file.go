@@ -10,6 +10,8 @@ import (
 	"example.com/sra-monitor/internal/event"
 )
 
+const SFILES_TXT string = "LINUX-SENSITIVE-FILES.txt"
+
 /*
 Creates a new file, and adds a header to knwo what each field is
 */
@@ -58,6 +60,7 @@ an empty slice if something failed while opening and processing the file
 */
 func RetrieveSensitiveFilesList(name string) []string {
 
+	fmt.Printf("Loading files...\n")
 	file, err := OpenFileRead(name)
 	if err != nil {
 		fmt.Printf("File %s could not be opened. Permissions?", name)
@@ -79,6 +82,7 @@ func RetrieveSensitiveFilesList(name string) []string {
 			continue
 		}
 		sensitive_files = append(sensitive_files, line)
+		fmt.Printf("Formatted line succesfully: (%s)\n", line)
 	}
 
 	if err := scn.Err(); err != nil {

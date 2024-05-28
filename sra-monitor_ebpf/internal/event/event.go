@@ -24,11 +24,11 @@ type Event struct {
 
 // Interface. Selects what event to unmarshall based on 1st char
 // and returns an event filled or empty
-func UnmarshallEvent(marshd []byte) Event {
+func UnmarshallEvent(marshd []byte, sfiles []string) Event {
 	if len(marshd) == 188 && marshd[0] == 'o' {
-		return unmarshallOpenatEvent(marshd)
+		return unmarshallOpenatEvent(marshd, sfiles)
 	} else if len(marshd) == 68 && marshd[0] == 'w' {
-		return unmarshallWriteEvent(marshd)
+		return unmarshallWriteEvent(marshd, sfiles)
 	} else {
 		return Event{}
 	}
@@ -37,10 +37,16 @@ func UnmarshallEvent(marshd []byte) Event {
 /*
 Parses a byte array transforming it into an Openat Syscall Event
 */
-func unmarshallOpenatEvent(marshd []byte) Event {
+func unmarshallOpenatEvent(marshd []byte, sfiles []string) Event {
 	//First we need to parse the events. Since most of the time the
 	// Automatic process wil not do it properly with the offsets
 	// We need to do it manually like so.
+
+	// I put this first to avoid further unmarshalling if filename is not observable
+	filename := string(marshd[28:156])
+	if !isInList(filename, sfiles) {
+		return Event{}
+	}
 
 	// Initial byte for opcode to string
 	syscall_code := marshd[0]
@@ -53,15 +59,10 @@ func unmarshallOpenatEvent(marshd []byte) Event {
 	// Find the username
 	username := utils.GetUsernameFromUid(uid)
 
-	// Get Commname(LEN = 16) and Filename (LEN = 64)
+	// Get Commname(LEN = 16) and Filename (LEN = 128)
 	comm := string(marshd[12:28])
 	if strings.Contains(comm, "monitor") {
 		// We don't want to trace this process
-		return Event{}
-	}
-
-	filename := string(marshd[28:156])
-	if strings.EqualFold(filename, "") {
 		return Event{}
 	}
 
@@ -91,7 +92,7 @@ func unmarshallOpenatEvent(marshd []byte) Event {
 	return evt
 }
 
-func unmarshallWriteEvent(marshd []byte) Event {
+func unmarshallWriteEvent(marshd []byte, sfiles []string) Event {
 	//First we need to parse the events. Since most of the time the
 	// Automatic process wil not do it properly with the offsets
 	// We need to do it manually like so.
@@ -116,8 +117,8 @@ func unmarshallWriteEvent(marshd []byte) Event {
 
 	fd := binary.LittleEndian.Uint64(marshd[32:40])
 	filename := utils.GetFilePath(pid, fd)
-	// TODO: This has to go once we limit reach to certain files
-	if strings.Contains(filename, ":[") || strings.EqualFold(filename, "/dev/tty") {
+	// Verifies that filename is in list, otherwise, we don't observe
+	if !isInList(filename, sfiles) {
 		return Event{}
 	}
 
@@ -146,4 +147,13 @@ func unmarshallWriteEvent(marshd []byte) Event {
 
 	//utils.PrintBytesHex(marshd)
 	return evt
+}
+
+func isInList(filename string, sfiles []string) bool {
+	for i := 0; i < len(sfiles); i++ {
+		if strings.Contains(filename, sfiles[i]) {
+			return true
+		}
+	}
+	return false
 }

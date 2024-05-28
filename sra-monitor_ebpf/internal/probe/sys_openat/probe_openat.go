@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"example.com/sra-monitor/internal/event"
+	"example.com/sra-monitor/internal/file"
 	"example.com/sra-monitor/utils"
 	"github.com/cilium/ebpf/perf"
 )
@@ -29,23 +30,6 @@ func Run(evts chan event.Event) {
 	// Attach tracepoint to sys_exit_open
 	tpExitOpen := utils.AttachTracepoint("sys_exit_openat", objs.openatPrograms.TraceExitOpen)
 	defer tpExitOpen.Close()
-	/*
-		// Attach tracepoint to sys_enter_open
-		tpEnterRead := attachTracepoint("sys_enter_read", objs.monitorPrograms.TraceEnterRead)
-		defer tpEnterRead.Close()
-
-		// Attach tracepoint to sys_exit_open
-		tpExitRead := attachTracepoint("sys_exit_read", objs.monitorPrograms.TraceExitRead)
-		defer tpExitRead.Close()
-
-		// Attach tracepoint to sys_enter_open
-		tpEnterWrite := attachTracepoint("sys_enter_write", objs.monitorPrograms.TracepointEnterWrite)
-		defer tpEnterWrite.Close()
-
-		// Attach tracepoint to sys_exit_open
-		tpExitWrite := attachTracepoint("sys_exit_write", objs.monitorPrograms.TraceExitWrite)
-		defer tpExitWrite.Close()
-	*/
 	fmt.Println("Done!")
 
 	// Create a reader able to extract info from the map
@@ -60,6 +44,10 @@ func Run(evts chan event.Event) {
 Loops indefinetly to read events from the bpf map as they happen.
 */
 func readEvents(rd *perf.Reader, evts chan event.Event) {
+	sensitive_files := file.RetrieveSensitiveFilesList(file.SFILES_TXT)
+	if len(sensitive_files) == 0 {
+		os.Exit(-10)
+	}
 	for {
 		record, err := rd.Read()
 		if err != nil {
@@ -68,9 +56,9 @@ func readEvents(rd *perf.Reader, evts chan event.Event) {
 		}
 
 		// Determine the type of event based on the size of the record
-		evt := event.UnmarshallEvent(record.RawSample)
+		evt := event.UnmarshallEvent(record.RawSample, sensitive_files)
 		if evt != (event.Event{}) {
-			evts <- event.UnmarshallEvent(record.RawSample)
+			evts <- event.UnmarshallEvent(record.RawSample, sensitive_files)
 		}
 	}
 }
