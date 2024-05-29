@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	"example.com/sra-monitor/dbg"
 	"example.com/sra-monitor/internal/event"
 	"example.com/sra-monitor/internal/file"
 	probe_openat "example.com/sra-monitor/internal/probe/sys_openat"
@@ -35,13 +36,13 @@ func main() {
 	for {
 		evt := <-event_channel
 
-		fmt.Printf("%s %s run %s (PID: %d) executed %s in %d ms on file %s. Returned: %d\n", evt.Date,
+		dbg.DebugPrintf("%s %s run %s (PID: %d) executed %s in %d ms on file %s. Returned: %d\n", evt.Date,
 			evt.User, evt.Comm, evt.PID, evt.Syscall, evt.Latency, evt.File, evt.Retval)
 
 		// Attempt to append entry to file
 		err := file.AppendToFile(log, evt)
 		if err != nil {
-			fmt.Printf("Could not event append to file\n")
+			dbg.DebugPrintf("Could not event append to file\n")
 			continue
 		}
 	}

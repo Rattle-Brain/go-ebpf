@@ -7,6 +7,7 @@ import (
 	"os"
 	"strings"
 
+	"example.com/sra-monitor/dbg"
 	"example.com/sra-monitor/internal/event"
 	logrus "github.com/sirupsen/logrus"
 )
@@ -80,11 +81,11 @@ func RetrieveSensitiveFilesList(name string) []string {
 		}
 		// Ignore invalid lines and print debug message
 		if line[0] != '/' {
-			fmt.Printf("DEBUG: Ignored line '%s' as it does not start with '/' (root directory)\n", line)
+			dbg.DebugPrintf("DEBUG: Ignored line '%s' as it does not start with '/' (root directory)\n", line)
 			continue
 		}
 		sensitive_files = append(sensitive_files, line)
-		fmt.Printf("Formatted line succesfully: (%s)\n", line)
+		dbg.DebugPrintfExtra("Formatted line succesfully: (%s)\n", line)
 	}
 
 	if err := scn.Err(); err != nil {

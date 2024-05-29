@@ -1,10 +1,10 @@
 package sysopenat
 
 import (
-	"fmt"
 	"log"
 	"os"
 
+	"example.com/sra-monitor/dbg"
 	"example.com/sra-monitor/internal/event"
 	"example.com/sra-monitor/internal/file"
 	"example.com/sra-monitor/utils"
@@ -14,29 +14,29 @@ import (
 //go:generate go run github.com/cilium/ebpf/cmd/bpf2go -target bpfel -cc clang openat ../../../bpf/openat_monitor.bpf.c -- -I/usr/include/linux/bpf.h
 
 func Run(evts chan event.Event) {
-	fmt.Println("Setting memory limit...")
+	dbg.DebugPrintlnExtra("Setting memory limit...")
 	utils.SetMemLimit()
-	fmt.Println("Done!")
+	dbg.DebugPrintlnExtra("Done!")
 
 	// Create monitor ebpf objects and load them
 	objs := initializeBPFObjects()
 	defer objs.Close() // Need to be closed after
 
 	// Attach tracepoint to sys_enter_open
-	fmt.Println("\nAttaching tracepoints...")
+	dbg.DebugPrintlnExtra("\nAttaching Syscall Openat tracepoints...")
 	tpEnterOpen := utils.AttachTracepoint("sys_enter_openat", objs.openatPrograms.TraceEnterOpen)
 	defer tpEnterOpen.Close()
 
 	// Attach tracepoint to sys_exit_open
 	tpExitOpen := utils.AttachTracepoint("sys_exit_openat", objs.openatPrograms.TraceExitOpen)
 	defer tpExitOpen.Close()
-	fmt.Println("Done!")
+	dbg.DebugPrintlnExtra("Done!")
 
 	// Create a reader able to extract info from the map
 	rd := createRingBufferReader(objs)
 	defer rd.Close()
 
-	fmt.Println("\neBPF programs attached. Waiting for events...")
+	dbg.DebugPrintlnExtra("\neBPF Openat programs attached. Waiting for events...")
 	readEvents(rd, evts)
 }
 
@@ -51,7 +51,7 @@ func readEvents(rd *perf.Reader, evts chan event.Event) {
 	for {
 		record, err := rd.Read()
 		if err != nil {
-			log.Printf("Reading from ring buffer: %v", err)
+			dbg.DebugPrintf("Reading from ring buffer: %v", err)
 			continue
 		}
 
@@ -69,12 +69,12 @@ returns bpf objects
 */
 func initializeBPFObjects() openatObjects {
 	objs := openatObjects{}
-	fmt.Println("\nLoading eBPF objects...")
+	dbg.DebugPrintlnExtra("\nLoading eBPF objects...")
 	if err := loadOpenatObjects(&objs, nil); err != nil {
 		log.Fatalf("Loading objects: %v", err)
 		os.Exit(-1)
 	}
-	fmt.Println("Done!")
+	dbg.DebugPrintlnExtra("Done!")
 	return objs
 }
 
@@ -82,12 +82,12 @@ func initializeBPFObjects() openatObjects {
 Attempts to create a Reader to extract data from the ring buffer
 */
 func createRingBufferReader(objs openatObjects) *perf.Reader {
-	fmt.Println("\nCreating reader...")
+	dbg.DebugPrintlnExtra("\nCreating reader...")
 	rd, err := perf.NewReader(objs.FileEventMap, os.Getpagesize())
 	if err != nil {
 		log.Fatalf("Opening ring buffer reader: %v", err)
 		os.Exit(-4)
 	}
-	fmt.Println("Done!")
+	dbg.DebugPrintlnExtra("Done!")
 	return rd
 }
