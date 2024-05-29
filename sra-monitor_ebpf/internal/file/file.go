@@ -113,9 +113,9 @@ func AppendToFile(file *os.File, evt event.Event) error {
 	logger.Out = file
 
 	logger.SetFormatter(&logrus.TextFormatter{
-		DisableColors: false,
-		FullTimestamp: false,
-		ForceQuote:    true,
+		DisableColors:    false,
+		DisableTimestamp: true,
+		ForceQuote:       true,
 	})
 
 	logger.WithFields(logrus.Fields{
