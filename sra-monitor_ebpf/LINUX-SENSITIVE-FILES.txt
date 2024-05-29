@@ -6,7 +6,6 @@
 /etc/shadow
 /etc/passwd
 /etc/gshadow
-/etc/hosts
 /etc/crontab
 /etc/group
 /etc/hosts

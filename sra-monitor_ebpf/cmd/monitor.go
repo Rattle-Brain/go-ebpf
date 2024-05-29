@@ -26,11 +26,13 @@ func main() {
 
 	// Send the variables to where they're needed
 	if !verbose {
-		fmt.Printf("Starting monitor...\nNo information will be shown in console.\nEnable verbose mode for that")
+		// Message so the user knows to expect no messages
+		fmt.Printf("Starting monitor...\nOnly errors will be shown in console.\nEnable verbose mode to see more messages")
 	}
 	dbg.SetVerboseMode(verbose)
 	dbg.SetExtraVerboseMode(extraVerbose)
 
+	// Now we open or create a log file to output info to
 	log, err := file.OpenFileWrite(file.OUTPUT_LOG)
 	if err != nil {
 		dbg.DebugPrintf("Could not open LOG file. Creating one...\n")
@@ -50,15 +52,24 @@ func main() {
 	go probe_openat.Run(event_channel)
 	go probe_write.Run(event_channel)
 
+	// Goroutine to watch the file
+	go file.WatchFile(file.SFILES_TXT)
+
+	// And finally let's initialize the information exisiting in the SRA file
+	event.SFILES = file.RetrieveSensitiveFilesList(file.SFILES_TXT)
+
 	// Infinite loop to read from channel and print information
 	for {
 		evt := <-event_channel
-
+		if err != nil {
+			fmt.Printf("Error retrieving sensitive files list: %v\n", err)
+			return
+		}
 		dbg.DebugPrintf("%s %s run %s (PID: %d) executed %s in %d ms on file %s. Returned: %d\n", evt.Date,
 			evt.User, evt.Comm, evt.PID, evt.Syscall, evt.Latency, evt.File, evt.Retval)
 
 		// Attempt to append entry to file
-		err := file.AppendToFile(log, evt)
+		err = file.AppendToFile(log, evt)
 		if err != nil {
 			dbg.DebugPrintf("Could not event append to file\n")
 			continue

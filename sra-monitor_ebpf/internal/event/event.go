@@ -10,6 +10,8 @@ import (
 
 const NS_TO_MS = 1000
 
+var SFILES []string
+
 type Event struct {
 	Syscall string // Syscall name
 	PID     uint32
@@ -24,11 +26,12 @@ type Event struct {
 
 // Interface. Selects what event to unmarshall based on 1st char
 // and returns an event filled or empty
-func UnmarshallEvent(marshd []byte, sfiles []string) Event {
+func UnmarshallEvent(marshd []byte) Event {
+
 	if len(marshd) == 188 && marshd[0] == 'o' {
-		return unmarshallOpenatEvent(marshd, sfiles)
+		return unmarshallOpenatEvent(marshd)
 	} else if len(marshd) == 68 && marshd[0] == 'w' {
-		return unmarshallWriteEvent(marshd, sfiles)
+		return unmarshallWriteEvent(marshd)
 	} else {
 		return Event{}
 	}
@@ -37,14 +40,14 @@ func UnmarshallEvent(marshd []byte, sfiles []string) Event {
 /*
 Parses a byte array transforming it into an Openat Syscall Event
 */
-func unmarshallOpenatEvent(marshd []byte, sfiles []string) Event {
+func unmarshallOpenatEvent(marshd []byte) Event {
 	//First we need to parse the events. Since most of the time the
 	// Automatic process wil not do it properly with the offsets
 	// We need to do it manually like so.
 
 	// I put this first to avoid further unmarshalling if filename is not observable
 	filename := string(marshd[28:156])
-	if !isInList(filename, sfiles) {
+	if !isInList(filename, SFILES) {
 		return Event{}
 	}
 
@@ -92,7 +95,7 @@ func unmarshallOpenatEvent(marshd []byte, sfiles []string) Event {
 	return evt
 }
 
-func unmarshallWriteEvent(marshd []byte, sfiles []string) Event {
+func unmarshallWriteEvent(marshd []byte) Event {
 	//First we need to parse the events. Since most of the time the
 	// Automatic process wil not do it properly with the offsets
 	// We need to do it manually like so.
@@ -118,7 +121,7 @@ func unmarshallWriteEvent(marshd []byte, sfiles []string) Event {
 	fd := binary.LittleEndian.Uint64(marshd[32:40])
 	filename := utils.GetFilePath(pid, fd)
 	// Verifies that filename is in list, otherwise, we don't observe
-	if !isInList(filename, sfiles) {
+	if !isInList(filename, SFILES) {
 		return Event{}
 	}
 

@@ -6,7 +6,6 @@ import (
 
 	"example.com/sra-monitor/dbg"
 	"example.com/sra-monitor/internal/event"
-	"example.com/sra-monitor/internal/file"
 	"example.com/sra-monitor/utils"
 	"github.com/cilium/ebpf/perf"
 )
@@ -45,10 +44,6 @@ func Run(evts chan event.Event) {
 Loops indefinetly to read events from the bpf map as they happen.
 */
 func readEvents(rd *perf.Reader, evts chan event.Event) {
-	sensitive_files := file.RetrieveSensitiveFilesList(file.SFILES_TXT)
-	if len(sensitive_files) == 0 {
-		os.Exit(-10)
-	}
 	for {
 		record, err := rd.Read()
 		if err != nil {
@@ -57,9 +52,9 @@ func readEvents(rd *perf.Reader, evts chan event.Event) {
 		}
 
 		// Determine the type of event based on the size of the record
-		evt := event.UnmarshallEvent(record.RawSample, sensitive_files)
+		evt := event.UnmarshallEvent(record.RawSample)
 		if evt != (event.Event{}) {
-			evts <- event.UnmarshallEvent(record.RawSample, sensitive_files)
+			evts <- event.UnmarshallEvent(record.RawSample)
 		}
 	}
 }

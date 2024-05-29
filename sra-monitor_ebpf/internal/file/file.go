@@ -9,7 +9,8 @@ import (
 
 	"example.com/sra-monitor/dbg"
 	"example.com/sra-monitor/internal/event"
-	logrus "github.com/sirupsen/logrus"
+	"github.com/fsnotify/fsnotify"
+	"github.com/sirupsen/logrus"
 )
 
 var SFILES_TXT string = "LINUX-SENSITIVE-FILES.txt" // Modify this if you want another file
@@ -94,6 +95,38 @@ func RetrieveSensitiveFilesList(name string) []string {
 
 	return sensitive_files
 
+}
+
+func WatchFile(filename string) {
+	watcher, err := fsnotify.NewWatcher()
+	if err != nil {
+		fmt.Printf("Error creating watcher: %v\n", err)
+		return
+	}
+	defer watcher.Close()
+
+	err = watcher.Add(filename)
+	if err != nil {
+		fmt.Printf("Error adding file to watcher: %v\n", err)
+		return
+	}
+
+	for {
+		select {
+		case evt, ok := <-watcher.Events:
+			if !ok {
+				return
+			}
+			if evt.Op&fsnotify.Write == fsnotify.Write {
+				event.SFILES = RetrieveSensitiveFilesList(filename)
+			}
+		case err, ok := <-watcher.Errors:
+			if !ok {
+				return
+			}
+			fmt.Printf("Error in file watcher: %v\n", err)
+		}
+	}
 }
 
 /*
