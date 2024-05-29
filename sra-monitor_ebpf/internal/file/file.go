@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"example.com/sra-monitor/internal/event"
+	logrus "github.com/sirupsen/logrus"
 )
 
 const SFILES_TXT string = "LINUX-SENSITIVE-FILES.txt" // Modify this if you want another file
@@ -95,30 +96,38 @@ func RetrieveSensitiveFilesList(name string) []string {
 }
 
 /*
-Appends data to an opened file. The data is received from the pkt parameter,
-which contains the unmarshalled information of the intercepted Packet
+Appends data to an opened file using logrus.
+The data is received from the pkt parameter, which contains the
+unmarshalled information of the intercepted Packet
 */
 func AppendToFile(file *os.File, evt event.Event) error {
-
-	writer := csv.NewWriter(file)
-	defer writer.Flush()
-
-	date := evt.Date
-	user := evt.User
-	comm := evt.Comm
-	pid := fmt.Sprintf("%d", evt.PID)
-	syscall := evt.Syscall
-	latency := fmt.Sprintf("%d", evt.Latency)
-	fname := evt.File
-	retval := fmt.Sprintf("%d", evt.Retval)
-
-	data := []string{date, user, comm, pid, syscall, latency, fname, retval}
-
-	err := writer.Write(data)
-	if err != nil {
-		fmt.Printf("Error writing data to file\n")
-		return err
+	if file == nil {
+		return fmt.Errorf("pointer to file is nil (%p)", file)
 	}
+	if evt == (event.Event{}) {
+		return fmt.Errorf("cannot parse empty event")
+	}
+
+	// Create a new logrus logger
+	logger := logrus.New()
+	logger.Out = file
+
+	logger.SetFormatter(&logrus.TextFormatter{
+		DisableColors: false,
+		FullTimestamp: false,
+		ForceQuote:    true,
+	})
+
+	logger.WithFields(logrus.Fields{
+		"Date":         evt.Date,
+		"User":         evt.User,
+		"Proccess":     evt.Comm,
+		"PID":          evt.PID,
+		"Syscall":      evt.Syscall,
+		"Latency (ms)": evt.Latency,
+		"File":         evt.File,
+		"Return value": evt.Retval,
+	}).Info("")
 
 	return nil
 }
