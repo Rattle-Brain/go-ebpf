@@ -118,7 +118,7 @@ func AppendToFile(file *os.File, evt event.Event) error {
 		ForceQuote:       true,
 	})
 
-	logger.WithFields(logrus.Fields{
+	entry := logger.WithFields(logrus.Fields{
 		"Date":         evt.Date,
 		"User":         evt.User,
 		"Proccess":     evt.Comm,
@@ -127,7 +127,17 @@ func AppendToFile(file *os.File, evt event.Event) error {
 		"Latency (ms)": evt.Latency,
 		"File":         evt.File,
 		"Return value": evt.Retval,
-	}).Info("")
+	})
+
+	if strings.EqualFold(evt.Syscall, "Openat") {
+		entry.Info()
+	} else if strings.EqualFold(evt.Syscall, "Write") {
+		if strings.EqualFold(evt.User, "root") {
+			entry.Warn()
+		} else {
+			entry.Panic()
+		}
+	}
 
 	return nil
 }
