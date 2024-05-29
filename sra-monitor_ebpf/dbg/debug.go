@@ -34,5 +34,8 @@ func SetVerboseMode(v bool) {
 }
 
 func SetExtraVerboseMode(v bool) {
+	if v {
+		verbose = v
+	}
 	extraVerbose = v
 }

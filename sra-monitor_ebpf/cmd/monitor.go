@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"os"
 
@@ -11,14 +12,31 @@ import (
 	probe_write "example.com/sra-monitor/internal/probe/sys_write"
 )
 
+var verbose bool
+var extraVerbose bool
+
 func main() {
+
+	// Establish flags for the program to use
+	flag.BoolVar(&verbose, "v", false, "Enable verbose mode")
+	flag.BoolVar(&extraVerbose, "vv", false, "Enable extra verbose mode")
+	flag.StringVar(&file.OUTPUT_LOG, "L", "monitor.log", "Specific Log file name. If empty -> monitor.log")
+	flag.StringVar(&file.SFILES_TXT, "F", "LINUX-SENSITIVE-FILES.txt", "Sensitive-file-list text file. If empty it'll attempt to read from \"LINUX-SENSITIVE-FILES.txt\"")
+	flag.Parse()
+
+	// Send the variables to where they're needed
+	if !verbose {
+		fmt.Printf("Starting monitor...\nNo information will be shown in console.\nEnable verbose mode for that")
+	}
+	dbg.SetVerboseMode(verbose)
+	dbg.SetExtraVerboseMode(extraVerbose)
 
 	log, err := file.OpenFileWrite(file.OUTPUT_LOG)
 	if err != nil {
-		fmt.Printf("Could not open LOG file. Creating one...\n")
+		dbg.DebugPrintf("Could not open LOG file. Creating one...\n")
 		err = file.CreateFile(file.OUTPUT_LOG)
 		if err != nil {
-			fmt.Printf("Could not create LOG file. Aborting...")
+			dbg.DebugPrintf("Could not create LOG file. Aborting...")
 			os.Exit(-11)
 		}
 		log, _ = file.OpenFileWrite(file.OUTPUT_LOG)

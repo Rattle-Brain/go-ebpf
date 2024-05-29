@@ -12,8 +12,8 @@ import (
 	logrus "github.com/sirupsen/logrus"
 )
 
-const SFILES_TXT string = "LINUX-SENSITIVE-FILES.txt" // Modify this if you want another file
-const OUTPUT_LOG string = "monitor.log"
+var SFILES_TXT string = "LINUX-SENSITIVE-FILES.txt" // Modify this if you want another file
+var OUTPUT_LOG string = "monitor.log"
 
 /*
 Creates a new file, and adds a header to knwo what each field is
@@ -63,10 +63,10 @@ an empty slice if something failed while opening and processing the file
 */
 func RetrieveSensitiveFilesList(name string) []string {
 
-	fmt.Printf("Loading files...\n")
+	dbg.DebugPrintfExtra("Loading files...\n")
 	file, err := OpenFileRead(name)
 	if err != nil {
-		fmt.Printf("File %s could not be opened. Permissions?", name)
+		dbg.DebugPrintf("File %s could not be opened. Permissions?", name)
 		return ([]string{})
 	}
 	defer file.Close()
