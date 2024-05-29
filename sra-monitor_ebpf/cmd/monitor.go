@@ -52,7 +52,7 @@ func main() {
 	go probe_openat.Run(event_channel)
 	go probe_write.Run(event_channel)
 
-	// Goroutine to watch the file
+	// Goroutine to watch the file and update Sensitive Resources updates
 	go file.WatchFile(file.SFILES_TXT)
 
 	// And finally let's initialize the information exisiting in the SRA file

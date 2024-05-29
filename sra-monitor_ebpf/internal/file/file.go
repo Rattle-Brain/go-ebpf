@@ -90,6 +90,7 @@ func RetrieveSensitiveFilesList(name string) []string {
 	}
 
 	if err := scn.Err(); err != nil {
+		dbg.DebugPrintf("Scanner failure %s\n", err)
 		return ([]string{})
 	}
 
@@ -118,7 +119,15 @@ func WatchFile(filename string) {
 				return
 			}
 			if evt.Op&fsnotify.Write == fsnotify.Write {
-				event.SFILES = RetrieveSensitiveFilesList(filename)
+				temp := RetrieveSensitiveFilesList(filename)
+				if len(temp) > 0 {
+					dbg.DebugPrintfExtra("Applying changes")
+					event.SFILES = temp
+				} else if len(temp) == 0 {
+					dbg.DebugPrintfExtra("File contains no paths to observe. Change not applied")
+				} else {
+					dbg.DebugPrintln("File length is below 0. How did you do this?")
+				}
 			}
 		case err, ok := <-watcher.Errors:
 			if !ok {
