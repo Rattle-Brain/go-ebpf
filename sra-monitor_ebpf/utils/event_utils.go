@@ -30,11 +30,11 @@ func GetFilePath(pid uint32, fd uint64) string {
 func GetSyscallFromCode(b byte) string {
 	switch b {
 	case 'o':
-		return "Syscall Openat"
+		return "Openat"
 	case 'r':
-		return "Syscall Read"
+		return "Read"
 	case 'w':
-		return "Syscall Write"
+		return "Write"
 	default:
 		return "None"
 	}
