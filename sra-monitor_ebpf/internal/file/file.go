@@ -130,7 +130,11 @@ func AppendToFile(file *os.File, evt event.Event) error {
 	})
 
 	if strings.EqualFold(evt.Syscall, "Openat") {
-		entry.Info()
+		if evt.Retval >= 0 {
+			entry.Info()
+		} else {
+			entry.Warning()
+		}
 	} else if strings.EqualFold(evt.Syscall, "Write") {
 		if strings.EqualFold(evt.User, "root") {
 			entry.Warn()
