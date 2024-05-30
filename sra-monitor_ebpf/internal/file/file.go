@@ -155,7 +155,8 @@ func AppendToFile(file *os.File, evt event.Event) error {
 	}
 
 	// Create a new logrus logger
-	logger := logrus.New()
+	logger := logrus.New() // Only log the warning severity or above.
+	logger.SetLevel(logrus.DebugLevel)
 	logger.Out = file
 
 	logger.SetFormatter(&logrus.TextFormatter{
@@ -175,19 +176,11 @@ func AppendToFile(file *os.File, evt event.Event) error {
 		"Return value": evt.Retval,
 	})
 
-	switch strings.ToLower(evt.Syscall) {
-	case "openat":
-		if evt.Retval >= 0 {
-			entry.Info()
-		} else {
-			entry.Warn()
-		}
-	case "write":
-		if strings.EqualFold(evt.User, "root") {
-			entry.Warn()
-		} else {
-			entry.Error()
-		}
+	switch strings.ToLower(evt.Syscall)[0] {
+	case 'o':
+		logOpenatInfo(evt, entry)
+	case 'w':
+		logWriteInfo(evt, entry)
 	}
 
 	return nil
@@ -206,4 +199,24 @@ func CloseFile(file *os.File) error {
 		return err
 	}
 	return nil
+}
+
+func logOpenatInfo(evt event.Event, entry *logrus.Entry) {
+	if evt.Retval >= 0 {
+		if strings.Contains(evt.Comm, "DNS Resolver") {
+			entry.Info()
+		} else {
+			entry.Debug()
+		}
+	} else {
+		entry.Error()
+	}
+}
+
+func logWriteInfo(evt event.Event, entry *logrus.Entry) {
+	if strings.EqualFold(evt.User, "root") {
+		entry.Warning()
+	} else {
+		entry.Warning()
+	}
 }

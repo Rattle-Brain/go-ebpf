@@ -71,7 +71,7 @@ func main() {
 		// Attempt to append entry to file
 		err = file.AppendToFile(log, evt)
 		if err != nil {
-			dbg.DebugPrintf("Could not event append to file\n")
+			dbg.DebugPrintf("Could not append event to log file: %s\n", err)
 			continue
 		}
 	}
