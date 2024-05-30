@@ -4,6 +4,8 @@
 
 The eBPF Sensitive Resource Access Monitoring project is a system monitoring tool designed to track access to sensitive system resources in real-time. Leveraging eBPF (extended Berkeley Packet Filter) technology, this project provides deep visibility into file accesses, system calls, and other critical system activities, allowing administrators to detect potential security threats and unauthorized actions.
 
+This tool loads a slice of files to observe from the `LINUX-SENSITIVE-FILES.txt`file that can be found in this directory. This can be updated without having to stop and rerun the program. **All files must start from root (`/`) and have a full path**.
+
 ## Features
 
 - **Real-time Monitoring**: Capture access events to sensitive resources as they occur, providing instant visibility into system activities.
@@ -16,8 +18,9 @@ The eBPF Sensitive Resource Access Monitoring project is a system monitoring too
 
 ### Prerequisites
 
-- Linux kernel version 4.9 or later with eBPF support enabled
+- Linux kernel version 6.5.0 or later with eBPF support enabled
 - Go v1.22.2 installed on your system.
+- bpftool installed (just in case you need it, but it's not mandatory to run the program)
 - Necessary permissions to load and attach eBPF programs to kernel tracepoints or probes
 
 ---
@@ -36,10 +39,10 @@ Navigate to the directory of the program you want to compile and build the code.
 
 ```bash
 cd sra-monitor_ebpf
-go build -o sra-monitor ./cmd/main.go ./cmd/monitor_bpfel.go 
+go build -ldflags "-s -w" -o monitor ./cmd/monitor.go
 ```
 
-This command compiles the Go code and generates an executable binary named interceptor in the current directory.
+This command compiles the Go code and generates a release version executable binary named interceptor in the current directory.
 
 3. **Execute the generated binary:**
 
@@ -47,8 +50,33 @@ Once the compilation is successful, run the following command to execute the gen
 
 
 ```bash
-sudo ./sra-monitor
+sudo ./monitor
 ```
+
+This shows no information. If you want to see the events that are being traced, enable verbose mode by typing the following
+
+```bash
+sudo ./monitor -v
+```
+
+For extra verbose mode, that also shows debug information use the following command
+
+```bash
+sudo ./monitor -vv
+```
+
+By default SRA Monitor will dump the events in a log file called ```monitor.log``` that can be found in the same directory as the executable. If you want to change the name or the directory of the output file, do so with the `-L` tag
+
+```bash
+sudo ./monitor -L path/to/new/logfile.log
+```
+
+Finally, there's an option to change the input file's name or location by running the following command.
+```bash
+sudo ./monitor -F path/to/new/input/file.txt
+```
+
+You can run several flags at once and refer to the documentation by using `-h`.
 
 ### Note:
 
