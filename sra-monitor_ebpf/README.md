@@ -4,7 +4,7 @@
 
 The eBPF Sensitive Resource Access Monitoring project is a system monitoring tool designed to track access to sensitive system resources in real-time. Leveraging eBPF (extended Berkeley Packet Filter) technology, this project provides deep visibility into file accesses, system calls, and other critical system activities, allowing administrators to detect potential security threats and unauthorized actions.
 
-This tool loads a slice of files to observe from the `LINUX-SENSITIVE-FILES.txt`file that can be found in this directory. This can be updated without having to stop and rerun the program. **All files must start from root (`/`) and have a full path**.
+This tool loads a slice of files to observe from the `LINUX-SENSITIVE-FILES.txt` file that can be found in this directory. This can be updated without having to stop and rerun the program. **All files must start from root (`/`) and have a full path**.
 
 ## Features
 
