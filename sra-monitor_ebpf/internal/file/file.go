@@ -123,10 +123,13 @@ func WatchFile(filename string) {
 				if len(temp) > 0 {
 					dbg.DebugPrintfExtra("Applying changes")
 					event.SFILES = temp
+					continue
 				} else if len(temp) == 0 {
 					dbg.DebugPrintfExtra("File contains no paths to observe. Change not applied")
+					continue
 				} else {
 					dbg.DebugPrintln("File length is below 0. How did you do this?")
+					continue
 				}
 			}
 		case err, ok := <-watcher.Errors:
@@ -172,17 +175,18 @@ func AppendToFile(file *os.File, evt event.Event) error {
 		"Return value": evt.Retval,
 	})
 
-	if strings.EqualFold(evt.Syscall, "Openat") {
+	switch strings.ToLower(evt.Syscall) {
+	case "openat":
 		if evt.Retval >= 0 {
 			entry.Info()
 		} else {
-			entry.Warning()
+			entry.Warn()
 		}
-	} else if strings.EqualFold(evt.Syscall, "Write") {
+	case "write":
 		if strings.EqualFold(evt.User, "root") {
 			entry.Warn()
 		} else {
-			entry.Panic()
+			entry.Error()
 		}
 	}
 
