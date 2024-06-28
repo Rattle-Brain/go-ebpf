@@ -61,7 +61,7 @@ type user_actionsProgramSpecs struct {
 //
 // It can be passed ebpf.CollectionSpec.Assign.
 type user_actionsMapSpecs struct {
-	Events *ebpf.MapSpec `ebpf:"events"`
+	UserActionsMap *ebpf.MapSpec `ebpf:"user_actions_map"`
 }
 
 // user_actionsObjects contains all objects after they have been loaded into the kernel.
@@ -83,12 +83,12 @@ func (o *user_actionsObjects) Close() error {
 //
 // It can be passed to loadUser_actionsObjects or ebpf.CollectionSpec.LoadAndAssign.
 type user_actionsMaps struct {
-	Events *ebpf.Map `ebpf:"events"`
+	UserActionsMap *ebpf.Map `ebpf:"user_actions_map"`
 }
 
 func (m *user_actionsMaps) Close() error {
 	return _User_actionsClose(
-		m.Events,
+		m.UserActionsMap,
 	)
 }
 

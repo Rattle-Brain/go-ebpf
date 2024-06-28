@@ -79,7 +79,7 @@ Attempts to create a Reader to extract data from the ring buffer
 */
 func createRingBufferReader(objs user_actionsObjects) *perf.Reader {
 	dbg.DebugPrintlnExtra("\nCreating reader...")
-	rd, err := perf.NewReader(objs.user_actionsMaps.Events, os.Getpagesize())
+	rd, err := perf.NewReader(objs.UserActionsMap, os.Getpagesize())
 	if err != nil {
 		log.Fatalf("Opening ring buffer reader: %v", err)
 		os.Exit(-4)

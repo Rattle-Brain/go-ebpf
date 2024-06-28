@@ -18,32 +18,36 @@ https://docs.kernel.org/bpf/libbpf/libbpf_overview.html
 #include <bpf/bpf_tracing.h>
 #include <bpf/bpf_core_read.h>
 
-#define MAX_USER_LEN 32
+#define ACTION_LEN 16
+#define MAX_ENTRIES 1024
 
 struct user_action {
     u32 pid;
-    char user[MAX_USER_LEN];
-    char action[10];
+    u32 uid;
+    char action[ACTION_LEN];
 };
 
 struct {
     __uint(type, BPF_MAP_TYPE_PERF_EVENT_ARRAY);
-} events SEC(".maps");
+    __uint(max_entries, MAX_ENTRIES);
+    __type(key, u32);
+    __type(value, u32);
+} user_actions_map SEC(".maps");
 
 SEC("tracepoint/syscalls/sys_enter_setuid")
 int trace_login(struct trace_event_raw_sys_enter *ctx)
 {
-    struct user_action event = {};
+    struct user_action action_info = {};
     u32 uid = (u32)ctx->id;
 
     // Obtain the current process PID and user name
-    event.pid = bpf_get_current_pid_tgid() >> 32;
-    bpf_get_current_comm(event.user, sizeof(event.user));
+    action_info.pid = bpf_get_current_pid_tgid() >> 32;
+    action_info.uid = bpf_get_current_uid_gid();
 
     // Set action to "login"
-    __builtin_memcpy(event.action, "login", sizeof("login"));
+    __builtin_memcpy(action_info.action, "login", sizeof("login"));
 
-    bpf_perf_event_output(ctx, &events, BPF_F_CURRENT_CPU, &event, sizeof(event));
+    bpf_perf_event_output(ctx, &user_actions_map, BPF_F_CURRENT_CPU, &action_info, sizeof(action_info));
 
     return 0;
 }
@@ -51,16 +55,16 @@ int trace_login(struct trace_event_raw_sys_enter *ctx)
 SEC("tracepoint/syscalls/sys_enter_exit")
 int trace_logout(struct trace_event_raw_sys_enter *ctx)
 {
-    struct user_action event = {};
+    struct user_action action_info = {};
 
     // Obtain the current process PID and user name
-    event.pid = bpf_get_current_pid_tgid() >> 32;
-    bpf_get_current_comm(event.user, sizeof(event.user));
+    action_info.pid = bpf_get_current_pid_tgid() >> 32;
+    action_info.uid = bpf_get_current_uid_gid();
 
     // Set action to "logout"
-    __builtin_memcpy(event.action, "logout", sizeof("logout"));
+    __builtin_memcpy(action_info.action, "logout", sizeof("logout"));
 
-    bpf_perf_event_output(ctx, &events, BPF_F_CURRENT_CPU, &event, sizeof(event));
+    bpf_perf_event_output(ctx, &user_actions_map, BPF_F_CURRENT_CPU, &action_info, sizeof(action_info));
 
     return 0;
 }
