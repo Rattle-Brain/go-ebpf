@@ -20,7 +20,7 @@ https://docs.kernel.org/bpf/libbpf/libbpf_overview.html
 
 #define MAX_USER_LEN 32
 
-struct event {
+struct user_action {
     u32 pid;
     char user[MAX_USER_LEN];
     char action[10];
@@ -33,7 +33,7 @@ struct {
 SEC("tracepoint/syscalls/sys_enter_setuid")
 int trace_login(struct trace_event_raw_sys_enter *ctx)
 {
-    struct event event = {};
+    struct user_action event = {};
     u32 uid = (u32)ctx->id;
 
     // Obtain the current process PID and user name
@@ -51,7 +51,7 @@ int trace_login(struct trace_event_raw_sys_enter *ctx)
 SEC("tracepoint/syscalls/sys_enter_exit")
 int trace_logout(struct trace_event_raw_sys_enter *ctx)
 {
-    struct event event = {};
+    struct user_action event = {};
 
     // Obtain the current process PID and user name
     event.pid = bpf_get_current_pid_tgid() >> 32;
