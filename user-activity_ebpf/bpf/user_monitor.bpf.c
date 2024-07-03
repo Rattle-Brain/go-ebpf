@@ -21,6 +21,8 @@ https://docs.kernel.org/bpf/libbpf/libbpf_overview.html
 #define ACTION_LEN 16
 #define MAX_ENTRIES 1024
 
+#define LAST_32BITS(x) x >> 32
+
 struct user_action {
     u32 pid;
     u32 uid;
@@ -41,8 +43,8 @@ int trace_login(struct trace_event_raw_sys_enter *ctx)
     u32 uid = (u32)ctx->id;
 
     // Obtain the current process PID and user name
-    action_info.pid = bpf_get_current_pid_tgid() >> 32;
-    action_info.uid = bpf_get_current_uid_gid();
+    action_info.pid = LAST_32BITS(bpf_get_current_pid_tgid());
+    action_info.uid = uid;
 
     // Set action to "login"
     __builtin_memcpy(action_info.action, "login", sizeof("login"));
