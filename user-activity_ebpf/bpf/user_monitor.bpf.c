@@ -40,7 +40,7 @@ SEC("tracepoint/syscalls/sys_enter_setuid")
 int trace_login(struct trace_event_raw_sys_enter *ctx)
 {
     struct user_action action_info = {};
-    u32 uid = (u32)ctx->id;
+    u32 uid = (u32)ctx->args[0];
 
     // Obtain the current process PID and user name
     action_info.pid = LAST_32BITS(bpf_get_current_pid_tgid());
