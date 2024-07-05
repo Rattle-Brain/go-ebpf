@@ -1,26 +1,23 @@
 package event
 
-import (
-	"encoding/binary"
-
-	"example.com/user-activity/utils"
-)
-
-type Action struct {
+// This struct defines the information of a process event
+// Such as PPID, or Action (clone, exec, fork)
+type Event struct {
 	Pid        uint32
-	User       string
-	ActionName string
+	Ppid       uint32
+	Uid        uint32
+	Gid        uint32
+	Comm       string
+	ParentComm string
+	Action     string
 }
 
-func UnmarshallAction(marshd []byte) Action {
+func UnmarshallEvent(marshd []byte) Event {
 	//utils.PrintBytesHex(marshd)
 
-	action := Action{}
+	evt := Event{}
 
-	action.Pid = binary.LittleEndian.Uint32(marshd[0:4])
-	uid := binary.LittleEndian.Uint32(marshd[4:8])
-	action.User = utils.GetUsernameFromUid(uid)
-	action.ActionName = string(marshd[8:24])
+	// TODO: Unmarshall binary to struct
 
-	return action
+	return evt
 }

@@ -17,6 +17,7 @@ https://docs.kernel.org/bpf/libbpf/libbpf_overview.html
 #include <bpf/bpf_helpers.h>
 #include <bpf/bpf_tracing.h>
 #include <bpf/bpf_core_read.h>
+#include <sys/cdefs.h>
 
 
 #define MAX_ENTRIES 1024
@@ -50,8 +51,7 @@ static __always_inline void fill_event(struct event *event, struct task_struct *
     bpf_probe_read_kernel(&event->parent_comm, sizeof(event->parent_comm), task->real_parent->comm);
 }
 
-SEC("tracepoint/syscalls/sys_enter_execve")
-int trace_execve(struct trace_event_raw_sys_enter *ctx) {
+static __always_inline int send_event_to_map(struct trace_event_raw_sys_enter *ctx, char action){
     struct event event = {};
     struct task_struct *task = (struct task_struct *)bpf_get_current_task();
 
@@ -61,26 +61,20 @@ int trace_execve(struct trace_event_raw_sys_enter *ctx) {
     return 0;
 }
 
+SEC("tracepoint/syscalls/sys_enter_execve")
+int trace_execve(struct trace_event_raw_sys_enter *ctx) {
+    return send_event_to_map(ctx, 'e');
+}
+
+
 SEC("tracepoint/syscalls/sys_enter_fork")
 int trace_fork(struct trace_event_raw_sys_enter *ctx) {
-    struct event event = {};
-    struct task_struct *task = (struct task_struct *)bpf_get_current_task();
-
-    fill_event(&event, task);
-
-    bpf_perf_event_output(ctx, &events, BPF_F_CURRENT_CPU, &event, sizeof(event));
-    return 0;
+    return send_event_to_map(ctx, 'f');
 }
 
 SEC("tracepoint/syscalls/sys_enter_clone")
 int trace_clone(struct trace_event_raw_sys_enter *ctx) {
-    struct event event = {};
-    struct task_struct *task = (struct task_struct *)bpf_get_current_task();
-
-    fill_event(&event, task);
-
-    bpf_perf_event_output(ctx, &events, BPF_F_CURRENT_CPU, &event, sizeof(event));
-    return 0;
+    return send_event_to_map(ctx, 'c');
 }
 
 char LICENSE[] SEC("license") = "GPL";

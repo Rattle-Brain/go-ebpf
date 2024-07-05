@@ -12,7 +12,7 @@ import (
 
 //go:generate go run github.com/cilium/ebpf/cmd/bpf2go -target bpfel -cc clang p_control ../../bpf/process_control.bpf.c -- -I/usr/include/linux/bpf.h
 
-func Run(evts chan event.Action) {
+func Run(evts chan event.Event) {
 	dbg.DebugPrintlnExtra("Setting memory limit...")
 	utils.SetMemLimit()
 	dbg.DebugPrintlnExtra("Done!")
@@ -21,14 +21,18 @@ func Run(evts chan event.Action) {
 	objs := initializeBPFObjects()
 	defer objs.Close() // Need to be closed after
 
-	// Attach tracepoint to sys_enter_open
+	// Attach tracepoint to sys_enter_clone
 	dbg.DebugPrintlnExtra("\nAttaching Syscall Write tracepoints...")
-	tpEnterWrite := utils.AttachTracepoint("sys_enter_setuid", objs.user_actionsPrograms.TraceLogin)
-	defer tpEnterWrite.Close()
+	tpClone := utils.AttachTracepoint("sys_enter_clone", objs.p_controlPrograms.TraceClone)
+	defer tpClone.Close()
 
-	// Attach tracepoint to sys_exit_open
-	tpExitWrite := utils.AttachTracepoint("sys_enter_exit", objs.user_actionsPrograms.TraceLogout)
-	defer tpExitWrite.Close()
+	// Attach tracepoint to sys_enter_execve
+	tpExecve := utils.AttachTracepoint("sys_enter_execve", objs.p_controlPrograms.TraceExecve)
+	defer tpExecve.Close()
+
+	// Attach tracepoint to sys_enter_fork
+	tpFork := utils.AttachTracepoint("sys_enter_fork", objs.p_controlPrograms.TraceFork)
+	defer tpFork.Close()
 
 	dbg.DebugPrintlnExtra("Done!")
 
@@ -43,7 +47,7 @@ func Run(evts chan event.Action) {
 /*
 Loops indefinetly to read events from the bpf map as they happen.
 */
-func readEvents(rd *perf.Reader, acts chan event.Action) {
+func readEvents(rd *perf.Reader, acts chan event.Event) {
 	for {
 		record, err := rd.Read()
 		if err != nil {
@@ -52,9 +56,9 @@ func readEvents(rd *perf.Reader, acts chan event.Action) {
 		}
 
 		// Determine the type of event based on the size of the record
-		act := event.UnmarshallAction(record.RawSample)
-		if act != (event.Action{}) {
-			acts <- event.UnmarshallAction(record.RawSample)
+		act := event.UnmarshallEvent(record.RawSample)
+		if act != (event.Event{}) {
+			acts <- event.UnmarshallEvent(record.RawSample)
 		}
 	}
 }
@@ -63,10 +67,10 @@ func readEvents(rd *perf.Reader, acts chan event.Action) {
 Initializes the bpf objects, loading them into userspace
 returns bpf objects
 */
-func initializeBPFObjects() user_actionsObjects {
-	objs := user_actionsObjects{}
+func initializeBPFObjects() p_controlObjects {
+	objs := p_controlObjects{}
 	dbg.DebugPrintlnExtra("\nLoading eBPF objects...")
-	if err := loadUser_actionsObjects(&objs, nil); err != nil {
+	if err := loadP_controlObjects(&objs, nil); err != nil {
 		log.Fatalf("Loading objects: %v", err)
 		os.Exit(-1)
 	}
@@ -77,9 +81,9 @@ func initializeBPFObjects() user_actionsObjects {
 /*
 Attempts to create a Reader to extract data from the ring buffer
 */
-func createRingBufferReader(objs user_actionsObjects) *perf.Reader {
+func createRingBufferReader(objs p_controlObjects) *perf.Reader {
 	dbg.DebugPrintlnExtra("\nCreating reader...")
-	rd, err := perf.NewReader(objs.UserActionsMap, os.Getpagesize())
+	rd, err := perf.NewReader(objs.Events, os.Getpagesize())
 	if err != nil {
 		log.Fatalf("Opening ring buffer reader: %v", err)
 		os.Exit(-4)
