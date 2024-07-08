@@ -4,9 +4,9 @@ import (
 	"log"
 	"os"
 
-	"example.com/user-activity/dbg"
-	"example.com/user-activity/internal/event"
-	"example.com/user-activity/utils"
+	"example.com/process_control/dbg"
+	"example.com/process_control/internal/event"
+	"example.com/process_control/utils"
 	"github.com/cilium/ebpf/perf"
 )
 

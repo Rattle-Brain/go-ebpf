@@ -3,8 +3,8 @@ package main
 import (
 	"fmt"
 
-	"example.com/user-activity/internal/event"
-	"example.com/user-activity/internal/probe"
+	"example.com/process_control/internal/event"
+	"example.com/process_control/internal/probe"
 )
 
 func main() {

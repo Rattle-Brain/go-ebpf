@@ -1,4 +1,4 @@
-module example.com/user-activity
+module example.com/process_control
 
 go 1.22.4
 
