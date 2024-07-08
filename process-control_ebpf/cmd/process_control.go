@@ -17,6 +17,6 @@ func main() {
 
 		evt := <-event_channel
 
-		fmt.Printf("User %s performed %s action\n", evt.Comm, evt.Action)
+		fmt.Printf("Task %s with parent %s performed action %s\n", evt.Comm, evt.ParentComm, evt.Action)
 	}
 }

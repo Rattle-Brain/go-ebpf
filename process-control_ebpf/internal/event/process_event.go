@@ -19,7 +19,7 @@ type Event struct {
 }
 
 func UnmarshallEvent(marshd []byte) Event {
-	utils.PrintBytesHex(marshd)
+	//utils.PrintBytesHex(marshd)
 
 	evt := Event{}
 
@@ -30,7 +30,7 @@ func UnmarshallEvent(marshd []byte) Event {
 
 	evt.Comm = string(marshd[16:32])
 	evt.ParentComm = string(marshd[32:48])
-	// TODO: Unmarshall binary to struct
+	evt.Action = utils.GetSyscallFromCode(marshd[48])
 
 	return evt
 }
