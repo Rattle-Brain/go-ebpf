@@ -44,12 +44,21 @@ struct {
 
 static __always_inline void fill_event(struct event *event, struct task_struct *task) {
     if(event && task){
+        // Process info
         bpf_probe_read_kernel(&event->pid, sizeof(event->pid), &task->pid);
-        bpf_probe_read_kernel(&event->pid, sizeof(event->ppid), &task->real_parent->pid);
-        bpf_probe_read_kernel(&event->uid, sizeof(event->uid), &task->cred->uid.val);
-        bpf_probe_read_kernel(&event->gid, sizeof(event->gid), &task->cred->gid.val);
         bpf_get_current_comm(&event->comm, sizeof(event->comm));
-        bpf_probe_read_kernel(&event->parent_comm, sizeof(event->parent_comm), task->real_parent->comm);
+        
+        // Parent process info
+        struct task_struct *real_parent;
+        bpf_probe_read_kernel(&real_parent, sizeof(&real_parent), &task->real_parent);
+        bpf_probe_read_kernel(&event->ppid, sizeof(event->ppid), &real_parent->pid);
+        bpf_probe_read_kernel(&event->parent_comm, sizeof(event->parent_comm), real_parent->comm);
+
+        // Credentials task info
+        struct cred *cred;
+        bpf_probe_read_kernel(&cred, sizeof(&cred), &task->cred);
+        bpf_probe_read_kernel(&event->uid, sizeof(event->uid), &cred->uid.val);
+        bpf_probe_read_kernel(&event->gid, sizeof(event->gid), &cred->gid.val);
     }
 }
 
@@ -58,6 +67,9 @@ static __always_inline int send_event_to_map(struct trace_event_raw_sys_enter *c
     struct task_struct *task = (struct task_struct *)bpf_get_current_task();
 
     fill_event(&event, task);
+
+    // Add the action code to the event struct
+    __builtin_memcpy(&event.action, &action, sizeof(char));
 
     bpf_perf_event_output(ctx, &events, BPF_F_CURRENT_CPU, &event, sizeof(event));
     return 0;
