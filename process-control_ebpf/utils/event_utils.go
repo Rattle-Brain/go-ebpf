@@ -29,12 +29,12 @@ func GetFilePath(pid uint32, fd uint64) string {
 // Obtains a syscall name given a char as code
 func GetSyscallFromCode(b byte) string {
 	switch b {
-	case 'o':
-		return "Openat"
-	case 'r':
-		return "Read"
-	case 'w':
-		return "Write"
+	case 'c':
+		return "Clone"
+	case 'f':
+		return "Fork"
+	case 'e':
+		return "Execv"
 	default:
 		return "None"
 	}
