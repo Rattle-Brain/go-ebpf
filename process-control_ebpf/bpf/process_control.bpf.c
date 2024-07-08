@@ -43,12 +43,14 @@ struct {
 } events SEC(".maps");
 
 static __always_inline void fill_event(struct event *event, struct task_struct *task) {
-    event->pid = task->pid;
-    event->ppid = task->real_parent->pid;
-    event->uid = task->cred->uid.val;
-    event->gid = task->cred->gid.val;
-    bpf_get_current_comm(&event->comm, sizeof(event->comm));
-    bpf_probe_read_kernel(&event->parent_comm, sizeof(event->parent_comm), task->real_parent->comm);
+    if(event && task){
+        bpf_probe_read_kernel(&event->pid, sizeof(event->pid), &task->pid);
+        bpf_probe_read_kernel(&event->pid, sizeof(event->ppid), &task->real_parent->pid);
+        bpf_probe_read_kernel(&event->uid, sizeof(event->uid), &task->cred->uid.val);
+        bpf_probe_read_kernel(&event->gid, sizeof(event->gid), &task->cred->gid.val);
+        bpf_get_current_comm(&event->comm, sizeof(event->comm));
+        bpf_probe_read_kernel(&event->parent_comm, sizeof(event->parent_comm), task->real_parent->comm);
+    }
 }
 
 static __always_inline int send_event_to_map(struct trace_event_raw_sys_enter *ctx, char action){
@@ -71,6 +73,7 @@ SEC("tracepoint/syscalls/sys_enter_fork")
 int trace_fork(struct trace_event_raw_sys_enter *ctx) {
     return send_event_to_map(ctx, 'f');
 }
+
 
 SEC("tracepoint/syscalls/sys_enter_clone")
 int trace_clone(struct trace_event_raw_sys_enter *ctx) {
