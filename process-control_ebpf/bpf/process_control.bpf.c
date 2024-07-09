@@ -21,13 +21,16 @@ https://docs.kernel.org/bpf/libbpf/libbpf_overview.html
 
 
 #define MAX_ENTRIES 1024
+#define COMM_NAME_LEN 32
 
 #define LAST_32BITS(x) x >> 32
 
 
 struct event {
-    u32 pid;
     u32 ppid;
+    u32 puid;
+    u32 pgid;
+    u32 pid;
     u32 uid;
     u32 gid;
     char comm[TASK_COMM_LEN];
@@ -48,17 +51,22 @@ static __always_inline void fill_event(struct event *event, struct task_struct *
         bpf_probe_read_kernel(&event->pid, sizeof(event->pid), &task->pid);
         bpf_get_current_comm(&event->comm, sizeof(event->comm));
         
+        // Credentials task info
+        struct cred *task_cred;
+        bpf_probe_read_kernel(&task_cred, sizeof(&task_cred), &task->cred);
+        bpf_probe_read_kernel(&event->uid, sizeof(event->uid), &task_cred->uid.val);
+        bpf_probe_read_kernel(&event->gid, sizeof(event->gid), &task_cred->gid.val);
+
         // Parent process info
         struct task_struct *real_parent;
         bpf_probe_read_kernel(&real_parent, sizeof(&real_parent), &task->real_parent);
         bpf_probe_read_kernel(&event->ppid, sizeof(event->ppid), &real_parent->pid);
         bpf_probe_read_kernel(&event->parent_comm, sizeof(event->parent_comm), real_parent->comm);
 
-        // Credentials task info
-        struct cred *cred;
-        bpf_probe_read_kernel(&cred, sizeof(&cred), &task->cred);
-        bpf_probe_read_kernel(&event->uid, sizeof(event->uid), &cred->uid.val);
-        bpf_probe_read_kernel(&event->gid, sizeof(event->gid), &cred->gid.val);
+        // We need another cred struct to store info from the real_parent_task so we reuse the previous one
+        bpf_probe_read_kernel(&task_cred, sizeof(&task_cred), &real_parent->cred);
+        bpf_probe_read_kernel(&event->puid, sizeof(event->puid), &task_cred->uid.val);
+        bpf_probe_read_kernel(&event->pgid, sizeof(event->pgid), &task_cred->gid.val);
     }
 }
 
@@ -71,7 +79,10 @@ static __always_inline int send_event_to_map(struct trace_event_raw_sys_enter *c
     // Add the action code to the event struct
     __builtin_memcpy(&event.action, &action, sizeof(char));
 
-    bpf_perf_event_output(ctx, &events, BPF_F_CURRENT_CPU, &event, sizeof(event));
+    // Let's check if the parent_task and current_task differ in privileges
+    if((event.puid != event.uid || event.pgid != event.gid) && event.uid != 1001){
+        bpf_perf_event_output(ctx, &events, BPF_F_CURRENT_CPU, &event, sizeof(event));
+    }
     return 0;
 }
 
