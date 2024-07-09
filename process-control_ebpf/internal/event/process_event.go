@@ -13,6 +13,8 @@ type Event struct {
 	Ppid       uint32
 	Uid        uint32
 	Gid        uint32
+	Username   string
+	Usergroup  string
 	Comm       string
 	ParentComm string
 	Action     string
@@ -28,6 +30,8 @@ func UnmarshallEvent(marshd []byte) Event {
 	evt.Uid = binary.LittleEndian.Uint32(marshd[8:12])
 	evt.Gid = binary.LittleEndian.Uint32(marshd[12:16])
 
+	evt.Username = utils.GetUsernameFromUid(evt.Uid)
+	evt.Usergroup = utils.GetGroupnameFromGid(evt.Gid)
 	evt.Comm = string(marshd[16:32])
 	evt.ParentComm = string(marshd[32:48])
 	evt.Action = utils.GetSyscallFromCode(marshd[48])

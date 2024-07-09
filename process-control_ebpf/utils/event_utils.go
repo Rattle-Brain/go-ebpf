@@ -16,6 +16,15 @@ func GetUsernameFromUid(uid uint32) string {
 	return u.Username
 }
 
+// Finds the group name based on a GID
+func GetGroupnameFromGid(gid uint32) string {
+	g, err := user.LookupGroupId(strconv.Itoa(int(gid)))
+	if err != nil {
+		return fmt.Sprintf("GID %d", gid)
+	}
+	return g.Name
+}
+
 // Finds the name of a file from a pid and a fd
 func GetFilePath(pid uint32, fd uint64) string {
 	path := fmt.Sprintf("/proc/%d/fd/%d", pid, fd)
