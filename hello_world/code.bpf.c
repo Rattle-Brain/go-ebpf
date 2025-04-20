@@ -1,6 +1,5 @@
 #include <stdbool.h>
 #include <stdint.h>
-#include <stdlib.h>
 
 #include <linux/bpf.h>
 #include <linux/bpf_common.h>
@@ -40,7 +39,6 @@ int trace_execve(struct trace_event_raw_sys_enter *ctx) {
     return 0;
 }
 
-// The license is important, don't forget to put i
-// // The license is important, don't forget to put itt
+// The license is important, don't forget to put it
 char _license[] SEC("license") = "GPL";
 
