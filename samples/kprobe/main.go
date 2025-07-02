@@ -1,4 +1,4 @@
-package main
+package main 
 
 import (
 	"fmt"
@@ -21,7 +21,7 @@ func main() {
 	defer objs.Close()
 
 	// Attach the program to the sched_switch tracepoint
-	link, err := link.Tracepoint("sched", "sched_switch", objs.codePrograms.HandleSchedSwitch, nil)
+	link, err := link.Kprobe("__traceiter_sched_switch", objs.KprobeSchedSwitch, nil)
 	if err != nil {
 		log.Fatalf("Failed to attach tracepoint: %v", err)
 	}
