@@ -42,7 +42,7 @@ cd sra-monitor_ebpf
 go build -ldflags "-s -w" -o monitor ./cmd/monitor.go
 ```
 
-This command compiles the Go code and generates a release version executable binary named interceptor in the current directory.
+This command compiles the Go code and generates a release version executable binary named monitor in the current directory.
 
 3. **Execute the generated binary:**
 

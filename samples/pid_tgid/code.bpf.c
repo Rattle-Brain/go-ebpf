@@ -35,15 +35,14 @@ struct entry_args_t {
     umode_t mode;
 };
 
-SEC("tracepoint/syscalls/sys_enter_execv")
+SEC("tracepoint/syscalls/sys_enter_execve")
 int trace_enter_execv(struct entry_args_t *ctx) {
 
-    // Get the file descriptor from the map
-    // We assume this map stores the flags for the openat syscall
+    // Get the current PID and TGID
     u64 current_task = bpf_get_current_pid_tgid();
 
-    int pid = current_task;                    
-    int tgid = current_task << 32;
+    int pid = current_task;
+    int tgid = current_task >> 32;
 
     bpf_printk("PID: %d, TGID: %d\n", pid, tgid);
     return 0;

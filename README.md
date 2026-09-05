@@ -38,11 +38,11 @@ git clone https://github.com/Rattle-Brain/go-ebpf.git
 Navigate to the directory of the program you want to compile and build the code. As an example:
 
 ```bash
-cd interceptor_ebpf
-go build -ldflags "-s -w" -o interceptor cmd/interceptor.go
+cd sra-monitor_ebpf
+go build -ldflags "-s -w" -o monitor ./cmd/monitor.go
 ```
 
-This command compiles the Go code and generates an executable binary named interceptor in the current directory.
+This command compiles the Go code and generates an executable binary named monitor in the current directory.
 
 3. **Execute the generated binary:**
 
@@ -50,7 +50,7 @@ Once the compilation is successful, run the following command to execute the gen
 
 ```bash
 
-sudo ./interceptor
+sudo ./monitor
 ```
 
 Further instructions and details are provided in the README of each program.

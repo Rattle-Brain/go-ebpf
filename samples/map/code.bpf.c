@@ -20,8 +20,11 @@ https://docs.kernel.org/bpf/libbpf/libbpf_overview.html
 
 #define MAX_ENTRIES 1024
 
+// A key-value store is a BPF_MAP_TYPE_HASH, not a BPF_MAP_TYPE_PERF_EVENT_ARRAY:
+// the latter is only meant to carry file descriptors for bpf_perf_event_output(),
+// which this program never calls.
 struct {
-    __uint(type, BPF_MAP_TYPE_PERF_EVENT_ARRAY);
+    __uint(type, BPF_MAP_TYPE_HASH);
     __uint(max_entries, MAX_ENTRIES);
     __type(key, u32);           // type u32 defined in vmlinux.h
     __type(value, umode_t);     // type umode_t defined in vmlinux.h
@@ -38,22 +41,30 @@ struct entry_args_t {
 SEC("tracepoint/syscalls/sys_enter_openat")
 int trace_enter_open(struct entry_args_t *ctx) {
 
-    // Get the file descriptor from the map
-    // We assume this map stores the flags for the openat syscall
-    umode_t* mode = bpf_map_lookup_elem(&file_event_map, &ctx->flags);
+    // We assume this map stores the mode associated with each openat flags value seen so far
+    u32 key = ctx->flags;
+    umode_t* mode = bpf_map_lookup_elem(&file_event_map, &key);
     if (mode == NULL) {
-        bpf_printk("Error looking up file descriptor\n");
-        return -1;
+        // First time we see this combination of flags: register it in the map
+        umode_t initial_mode = ctx->mode;
+        int err = bpf_map_update_elem(&file_event_map, &key, &initial_mode, BPF_NOEXIST);
+        if (err < 0) {
+            bpf_printk("Error registering flags %d in the map\n", key);
+            return -1;
+        }
+        bpf_printk("New flags value: %d (mode %d)\n", key, initial_mode);
+        return 0;
     }
 
-    // Now we can modify the mode to our liking
+    // We already saw these flags before: update the stored mode to the latest one
     // this is just an example and performs no real action
-    *mode = 0;
-    int err = bpf_map_update_elem(&file_event_map, &ctx->flags, mode, BPF_ANY);
+    *mode = ctx->mode;
+    int err = bpf_map_update_elem(&file_event_map, &key, mode, BPF_ANY);
     if (err < 0) {
         bpf_printk("Error updating file descriptor\n");
         return -1;
     }
+    bpf_printk("Updated flags %d with mode %d\n", key, *mode);
     return 0;
 
 }

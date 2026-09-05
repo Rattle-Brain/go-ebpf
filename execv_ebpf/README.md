@@ -37,7 +37,7 @@ cd execv_ebpf
 go build -o execve ./cmd/main.go ./cmd/execve_bpfel.go 
 ```
 
-This command compiles the Go code and generates an executable binary named interceptor in the current directory.
+This command compiles the Go code and generates an executable binary named execve in the current directory.
 
 3. **Execute the generated binary:**
 

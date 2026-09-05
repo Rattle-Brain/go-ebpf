@@ -5,30 +5,21 @@
 
 char LICENSE[] SEC("license") = "GPL";
 
-SEC("kprobe/sched_switch")
-int kprobe_sched_switch(struct pt_regs *ctx) {
-  struct task_struct *prev_task;
-  struct task_struct *next_task;
-  pid_t prev_pid, next_pid;
+// Unlike the tracepoint-based samples, a kprobe attaches directly to a real
+// kernel function by name instead of a tracepoint. __x64_sys_execve is the
+// syscall entry point for execve on x86_64: it always runs on every exec,
+// regardless of whether any tracepoint consumer is active elsewhere.
+SEC("kprobe/__x64_sys_execve")
+int kprobe_execve(struct pt_regs *ctx) {
+  struct task_struct *task;
+  pid_t pid;
+  char comm[TASK_COMM_LEN];
 
-  // Get the previous and next tasks from the current context
-  prev_task = (struct task_struct *)bpf_get_current_task();
+  task = (struct task_struct *)bpf_get_current_task();
+  pid = BPF_CORE_READ(task, pid);
+  bpf_get_current_comm(&comm, sizeof(comm));
 
-  // Read the command names and PIDs
-  char prev_comm[TASK_COMM_LEN];
-  char next_comm[TASK_COMM_LEN];
-  // bpf_probe_read_kernel_str(prev_comm, TASK_COMM_LEN, &prev_task->comm);
-  bpf_get_current_comm(&prev_comm, sizeof(prev_comm));
+  bpf_printk("KPROBE execve: [%d] %s", pid, comm);
 
-  prev_task = (void*)bpf_get_current_task();
-  prev_pid = BPF_CORE_READ(prev_task, pid);
-  // bpf_probe_read_kernel(prev_task, sizeof(pid_t), &prev_task->pid);
-
-  // Print the context switch information
-  // bpf_trace_printk("CTX_SWITCH: [%d] %s -> [%d] %s\n",
-  //                 0, prev_comm);
-  
-  bpf_printk("CTX HAS SWAPPED: [%d] %s", prev_pid, prev_comm);
-  
   return 0;
 }

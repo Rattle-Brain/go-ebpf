@@ -54,13 +54,14 @@ type codeSpecs struct {
 //
 // It can be passed ebpf.CollectionSpec.Assign.
 type codeProgramSpecs struct {
-	KprobeExecve *ebpf.ProgramSpec `ebpf:"kprobe_execve"`
+	TraceEnterOpen *ebpf.ProgramSpec `ebpf:"trace_enter_open"`
 }
 
 // codeMapSpecs contains maps before they are loaded into the kernel.
 //
 // It can be passed ebpf.CollectionSpec.Assign.
 type codeMapSpecs struct {
+	FileEventMap *ebpf.MapSpec `ebpf:"file_event_map"`
 }
 
 // codeVariableSpecs contains global variables before they are loaded into the kernel.
@@ -89,10 +90,13 @@ func (o *codeObjects) Close() error {
 //
 // It can be passed to loadCodeObjects or ebpf.CollectionSpec.LoadAndAssign.
 type codeMaps struct {
+	FileEventMap *ebpf.Map `ebpf:"file_event_map"`
 }
 
 func (m *codeMaps) Close() error {
-	return _CodeClose()
+	return _CodeClose(
+		m.FileEventMap,
+	)
 }
 
 // codeVariables contains all global variables after they have been loaded into the kernel.
@@ -105,12 +109,12 @@ type codeVariables struct {
 //
 // It can be passed to loadCodeObjects or ebpf.CollectionSpec.LoadAndAssign.
 type codePrograms struct {
-	KprobeExecve *ebpf.Program `ebpf:"kprobe_execve"`
+	TraceEnterOpen *ebpf.Program `ebpf:"trace_enter_open"`
 }
 
 func (p *codePrograms) Close() error {
 	return _CodeClose(
-		p.KprobeExecve,
+		p.TraceEnterOpen,
 	)
 }
 

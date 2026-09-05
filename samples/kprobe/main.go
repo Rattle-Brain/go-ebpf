@@ -20,10 +20,10 @@ func main() {
 	}
 	defer objs.Close()
 
-	// Attach the program to the sched_switch tracepoint
-	link, err := link.Kprobe("__traceiter_sched_switch", objs.KprobeSchedSwitch, nil)
+	// Attach the program directly to the __x64_sys_execve kernel function
+	link, err := link.Kprobe("__x64_sys_execve", objs.KprobeExecve, nil)
 	if err != nil {
-		log.Fatalf("Failed to attach tracepoint: %v", err)
+		log.Fatalf("Failed to attach kprobe: %v", err)
 	}
 	defer link.Close()
 
