@@ -1,2 +1,18 @@
 .vscode
 *.o
+
+# Compiled binaries (each sample/project builds one named after its own
+# directory, plus stray "main"/"target" outputs from `go build .` without
+# an explicit `-o`)
+main
+target
+execve
+monitor
+fentry
+kprobe
+map_demo
+perf_event
+pid_tgid
+printk
+sched_switch
+usdt
