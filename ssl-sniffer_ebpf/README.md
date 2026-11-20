@@ -276,6 +276,18 @@ go generate ./...                       # compiles bpf/ssl_sniffer.bpf.c via bpf
 go build -ldflags "-s -w" -o sslsniff ./cmd
 ```
 
+Alternatively, using [Nix](https://nixos.org/download/) with [Flakes](https://nixos.org/manual/nix/stable/command-ref/new-cli/nix3-flake.html)
+provides a reproducible userspace toolchain isolated from your host packages, albeit it still requires a linux host with
+kernel >= 5.8 and `sudo` for runtime execution:
+
+```bash
+# inside ssl-sniffer_ebpf directory
+nix develop
+```
+
+This evaluates `flake.nix`, provisions the required C/eBPF/Go build tools in `/nix/store`,
+and opens a shell with helper commands (compile, cleanup, sniff*) preloaded in PATH.
+
 ## Usage
 
 ```bash

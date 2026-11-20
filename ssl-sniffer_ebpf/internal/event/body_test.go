@@ -5,9 +5,10 @@ import (
 	"compress/gzip"
 	"compress/zlib"
 
-	"golang.org/x/net/http2/hpack"
 	"strings"
 	"testing"
+
+	"golang.org/x/net/http2/hpack"
 
 	"github.com/andybalholm/brotli"
 	"github.com/klauspost/compress/zstd"
@@ -124,6 +125,18 @@ func TestDechunkIncomplete(t *testing.T) {
 	}
 	if !strings.HasPrefix(string(got), "hello") {
 		t.Errorf("partial dechunk = %q, want at least the first chunk", got)
+	}
+}
+
+func TestDechunkMissingEndOfFile(t *testing.T) {
+	// 0x18 = 24 bytes of JSON, then a 5-byte chunk " tail", then the terminator.
+	chunked := "18\r\n{\"hello\":\"world\",\"n\":42}\r\n5\r\n tail\r\n0"
+	got, ok := dechunk([]byte(chunked))
+	if ok {
+		t.Error("ok = true when cutCRLF should have return not found")
+	}
+	if string(got) != `{"hello":"world","n":42} tail` {
+		t.Errorf("dechunk = %q", got)
 	}
 }
 

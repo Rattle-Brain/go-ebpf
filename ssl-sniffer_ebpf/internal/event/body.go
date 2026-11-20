@@ -7,6 +7,7 @@ import (
 	"compress/zlib"
 	"fmt"
 	"io"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -117,8 +118,8 @@ func normalizeEncoding(enc string) string {
 func decompress(encoding string, data []byte) ([]byte, error) {
 	encs := strings.Split(encoding, ",")
 	// Decode in reverse: the last listed encoding was applied last.
-	for i := len(encs) - 1; i >= 0; i-- {
-		enc := strings.ToLower(strings.TrimSpace(encs[i]))
+	for _, enc := range slices.Backward(encs) {
+		enc := strings.ToLower(strings.TrimSpace(enc))
 		out, err := decodeOne(enc, data)
 		if err != nil {
 			return out, err // out holds the partial result
@@ -202,9 +203,9 @@ func dechunk(data []byte) (out []byte, ok bool) {
 }
 
 func cutCRLF(data []byte) (line, rest []byte, found bool) {
-	i := bytes.Index(data, []byte("\r\n"))
-	if i < 0 {
+	before, after, ok := bytes.Cut(data, []byte("\r\n"))
+	if !ok {
 		return nil, data, false
 	}
-	return data[:i], data[i+2:], true
+	return before, after, true
 }

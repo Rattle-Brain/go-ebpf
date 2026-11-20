@@ -39,6 +39,10 @@ char LICENSE[] SEC("license") = "GPL";
 // cut and the event is flagged as truncated.
 #define MAX_DATA 16384
 
+// 16 * 1024 (2^14) for kernel alignment . This variable is decoupled from MAX_DATA
+// and is actually capped by /proc/sys/kernel/pid_max . Kernel defaults to 32768
+#define MAX_ENTRIES 16384
+
 enum ssl_dir {
   DIR_READ = 0,  // data received (after decryption)
   DIR_WRITE = 1, // data sent (before encryption)
@@ -73,7 +77,7 @@ struct ssl_args {
 // thread can only be inside one SSL_read/SSL_write at a time.
 struct {
   __uint(type, BPF_MAP_TYPE_HASH);
-  __uint(max_entries, 10240);
+  __uint(max_entries, MAX_ENTRIES);
   __type(key, __u64);
   __type(value, struct ssl_args);
 } active_calls SEC(".maps");
@@ -92,7 +96,7 @@ struct {
 // so a 40-byte HTTP request costs 40 bytes of ring space, not 16 KiB.
 struct {
   __uint(type, BPF_MAP_TYPE_RINGBUF);
-  __uint(max_entries, 16 * 1024 * 1024);
+  __uint(max_entries, MAX_ENTRIES);
 } events SEC(".maps");
 
 // Events that could not be delivered because the ring buffer was full.
